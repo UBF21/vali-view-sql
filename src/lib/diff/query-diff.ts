@@ -29,10 +29,6 @@ export function diffQueries(resultA: ParseResult, resultB: ParseResult): DiffDec
       return a.data.clause !== b.data.clause || a.data.detail !== b.data.detail
     })
 
-  const sameNodes = [...idsA].filter(
-    id => idsB.has(id) && !changedNodes.includes(id)
-  )
-
   // Generar summary legible
   const parts: string[] = []
   if (addedNodes.length) parts.push(`${addedNodes.length} added`)
@@ -48,8 +44,7 @@ export function diffQueries(resultA: ParseResult, resultB: ParseResult): DiffDec
     nodes: Node<SQLNodeData>[],
     added: string[],
     removed: string[],
-    changed: string[],
-    same: string[]
+    changed: string[]
   ): Node<SQLNodeData>[] =>
     nodes.map(n => ({
       ...n,
@@ -71,8 +66,7 @@ export function diffQueries(resultA: ParseResult, resultB: ParseResult): DiffDec
     resultA.nodes,
     [],           // no hay "added" en A
     removedNodes,
-    changedNodes,
-    sameNodes
+    changedNodes
   )
 
   // En el diagrama B: los addedNodes se muestran, los removedNodes no existen
@@ -80,8 +74,7 @@ export function diffQueries(resultA: ParseResult, resultB: ParseResult): DiffDec
     resultB.nodes,
     addedNodes,
     [],           // no hay "removed" en B
-    changedNodes,
-    sameNodes
+    changedNodes
   )
 
   return { nodesA, nodesB, diff }
