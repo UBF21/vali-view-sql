@@ -2,6 +2,7 @@ import { Parser } from 'node-sql-parser'
 import { dialectAdapter } from './dialect-adapter'
 import { astToGraph } from './ast-to-graph'
 import { autoLayout } from './layout'
+import { isSP, parseSP } from './sp-parser'
 import type { Dialect, ParseResult, SQLNodeData } from '@/types'
 import type { Node } from '@xyflow/react'
 
@@ -26,6 +27,16 @@ function buildErrorResult(sql: string, err: unknown): ParseResult {
 
 export function parseSQL(sql: string, dialect: Dialect): ParseResult {
   if (!sql.trim()) return { nodes: [], edges: [], glossary: [], rawAst: null }
+
+  if (isSP(sql)) {
+    const spResult = parseSP(sql, dialect)
+    return {
+      nodes: spResult.nodes,
+      edges: spResult.edges,
+      glossary: [],
+      rawAst: null,
+    }
+  }
 
   const normalizedSql = dialectAdapter(sql, dialect)
 
