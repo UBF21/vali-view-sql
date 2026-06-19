@@ -12,7 +12,7 @@ export function PanelRight() {
   const warnCount = issues.filter(i => i.severity === 'warning').length
 
   return (
-    <div style={{
+    <div className="app-shell-right" style={{
       width: 320,
       flexShrink: 0,
       borderLeft: '1px solid var(--border)',

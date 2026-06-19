@@ -10,6 +10,7 @@ import { useStepAnimation } from '@/hooks/useStepAnimation'
 import { StepperControls } from '@/components/diagram/StepperControls'
 import { ExportButton } from '@/components/diagram/ExportButton'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
+import { HistoryPicker } from '@/components/editor/HistoryPicker'
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
@@ -110,9 +111,10 @@ export function AppShell() {
     >
       <Header />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="app-shell-body" style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel: SQL editor */}
         <div
+          className="app-shell-left"
           style={{
             width: 380,
             flexShrink: 0,
@@ -128,7 +130,10 @@ export function AppShell() {
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               SQL Query
             </div>
-            <ExamplePicker />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <HistoryPicker />
+              <ExamplePicker />
+            </div>
           </div>
           <QueryEditor
             value={query}

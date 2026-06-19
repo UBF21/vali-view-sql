@@ -26,6 +26,7 @@ export function Header() {
   return (
     <>
     <header
+      className="app-header"
       style={{
         height: 48,
         display: 'flex',
@@ -54,7 +55,7 @@ export function Header() {
       </div>
 
       {/* Mode tabs */}
-      <div style={{ display: 'flex', gap: 2, background: 'var(--bg-elevated)', borderRadius: 6, padding: 2 }}>
+      <div className="mode-tabs" style={{ display: 'flex', gap: 2, background: 'var(--bg-elevated)', borderRadius: 6, padding: 2 }}>
         {(['explain', 'diff', 'stepper'] as AppMode[]).map((m) => (
           <button
             key={m}
@@ -84,6 +85,7 @@ export function Header() {
       {/* Copy Link */}
       <button
         onClick={copyLink}
+        aria-label="Copy shareable link"
         title="Copy shareable link"
         style={{
           background: 'var(--bg-primary)',
@@ -105,6 +107,7 @@ export function Header() {
       {/* Theme toggle */}
       <button
         onClick={toggleTheme}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         style={{
           background: 'var(--bg-primary)',

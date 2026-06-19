@@ -44,3 +44,41 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;
 }
+
+/* ─── Responsive: mobile 375px ─── */
+@media (max-width: 768px) {
+  /* AppShell: stack vertical */
+  .app-shell-body {
+    flex-direction: column !important;
+  }
+
+  /* Left panel: full width, fixed height */
+  .app-shell-left {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 200px !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Right panel: collapse */
+  .app-shell-right {
+    display: none !important;
+  }
+
+  /* Header: wrap */
+  .app-header {
+    flex-wrap: wrap !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  /* Mode tabs: full width */
+  .mode-tabs {
+    order: 2 !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
