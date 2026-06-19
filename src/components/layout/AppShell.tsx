@@ -2,6 +2,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { Header } from './Header'
 import { QueryEditor } from '@/components/editor/QueryEditor'
 import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
+import { PanelRight } from './PanelRight'
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
@@ -52,7 +53,7 @@ export function AppShell() {
           />
         </div>
 
-        {/* Right panel: diagram */}
+        {/* Center: diagram */}
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           {nodes.length === 0 && !isLoading && (
             <div
@@ -79,6 +80,9 @@ export function AppShell() {
             />
           </div>
         </div>
+
+        {/* Right panel: glossary / issues / suggestions */}
+        <PanelRight />
       </div>
     </div>
   )
