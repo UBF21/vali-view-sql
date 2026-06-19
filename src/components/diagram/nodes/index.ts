@@ -1,4 +1,4 @@
-import type { NodeType } from '@/types'
+import type { NodeType, SQLNodeData } from '@/types'
 import { TableNode } from './TableNode'
 import { JoinNode } from './JoinNode'
 import { FilterNode } from './FilterNode'
@@ -39,6 +39,21 @@ export const NODE_COLORS: Record<NodeType, {
   declare:   { bg: '#F5F3FF', border: '#A78BFA', text: '#4C1D95', icon: '$' },
   condition: { bg: '#FFF7ED', border: '#FB923C', text: '#7C2D12', icon: '◇' },
   loop:      { bg: '#FFF1F2', border: '#FB7185', text: '#881337', icon: '↺' },
+}
+
+// Diff coloring helpers
+export const DIFF_BORDER: Record<string, string> = {
+  added: '#22C55E',
+  removed: '#EF4444',
+  changed: '#EAB308',
+  same: '',
+}
+
+export function getDiffBorder(data: SQLNodeData, defaultBorder: string): string {
+  if (data.diffStatus && data.diffStatus !== 'same') {
+    return DIFF_BORDER[data.diffStatus] ?? defaultBorder
+  }
+  return data.hasIssue ? '#E24B4A' : defaultBorder
 }
 
 export const customNodeTypes = {

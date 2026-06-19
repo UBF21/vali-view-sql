@@ -20,6 +20,7 @@ interface DiagramCanvasProps {
   nodes: Node<SQLNodeData>[]
   edges: Edge[]
   isLoading?: boolean
+  isDiff?: boolean
   className?: string
 }
 

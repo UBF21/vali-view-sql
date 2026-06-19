@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { NODE_COLORS } from './index'
+import { NODE_COLORS, getDiffBorder } from './index'
 import type { SQLNodeData } from '@/types'
 
 export const ConditionNode = memo(function ConditionNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
@@ -10,7 +10,7 @@ export const ConditionNode = memo(function ConditionNode({ data, selected }: Nod
       width: 120, height: 120,
       transform: 'rotate(45deg)',
       background: colors.bg,
-      border: `2px solid ${colors.border}`,
+      border: `2px solid ${getDiffBorder(data, colors.border)}`,
       borderRadius: 8,
       opacity: data.isActive === false ? 0.3 : 1,
       transition: 'opacity 0.3s',

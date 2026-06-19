@@ -1,13 +1,15 @@
 import { useCallback } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { DialectSelector } from '@/components/editor/DialectSelector'
-import type { Dialect } from '@/types'
+import type { Dialect, AppMode } from '@/types'
 
 export function Header() {
   const theme = useAppStore((s) => s.theme)
   const setTheme = useAppStore((s) => s.setTheme)
   const dialect = useAppStore((s) => s.dialect)
   const setDialect = useAppStore((s) => s.setDialect)
+  const mode = useAppStore((s) => s.mode)
+  const setMode = useAppStore((s) => s.setMode)
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
@@ -47,6 +49,31 @@ export function Header() {
         >
           SQL Explainer
         </span>
+      </div>
+
+      {/* Mode tabs */}
+      <div style={{ display: 'flex', gap: 2, background: 'var(--bg-elevated)', borderRadius: 6, padding: 2 }}>
+        {(['explain', 'diff', 'stepper'] as AppMode[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            aria-label={`Switch to ${m} mode`}
+            style={{
+              padding: '3px 12px',
+              borderRadius: 4,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 600,
+              background: mode === m ? 'var(--accent)' : 'transparent',
+              color: mode === m ? '#fff' : 'var(--text-secondary)',
+              transition: 'background 0.15s, color 0.15s',
+              textTransform: 'capitalize',
+            }}
+          >
+            {m}
+          </button>
+        ))}
       </div>
 
       {/* Dialect selector */}

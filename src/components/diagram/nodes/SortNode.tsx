@@ -1,13 +1,13 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { NODE_COLORS } from './index'
+import { NODE_COLORS, getDiffBorder } from './index'
 import type { SQLNodeData } from '@/types'
 
 export const SortNode = memo(function SortNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
   const colors = NODE_COLORS.sort
   return (
     <div style={{
-      background: colors.bg, border: `1.5px solid ${colors.border}`, borderRadius: 8,
+      background: colors.bg, border: `1.5px solid ${getDiffBorder(data, colors.border)}`, borderRadius: 8,
       padding: '10px 14px', minWidth: 200, maxWidth: 260,
       opacity: data.isActive === false ? 0.3 : 1, transition: 'opacity 0.3s',
       outline: selected ? `2px solid ${colors.border}` : 'none', outlineOffset: 2,

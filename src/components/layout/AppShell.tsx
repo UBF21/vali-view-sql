@@ -3,6 +3,8 @@ import { Header } from './Header'
 import { QueryEditor } from '@/components/editor/QueryEditor'
 import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
 import { PanelRight } from './PanelRight'
+import { DiffEditor } from '@/components/editor/DiffEditor'
+import { useDiff } from '@/hooks/useDiff'
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
@@ -11,9 +13,46 @@ export function AppShell() {
   const setQuery = useAppStore((s) => s.setQuery)
   const parseResult = useAppStore((s) => s.parseResult)
   const isLoading = useAppStore((s) => s.isLoading)
+  const mode = useAppStore((s) => s.mode)
+  const diffData = useDiff()
 
   const nodes: Node<SQLNodeData>[] = parseResult?.nodes ?? []
   const edges: Edge[] = parseResult?.edges ?? []
+
+  if (mode === 'diff') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <Header />
+        {/* Editores */}
+        <div style={{ height: 180, flexShrink: 0, padding: 12, borderBottom: '1px solid var(--border)', overflow: 'hidden' }}>
+          <DiffEditor />
+        </div>
+        {/* Dos diagramas */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <div style={{ flex: 1, borderRight: '1px solid var(--border)', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 8, left: 12, fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', zIndex: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Query A
+            </div>
+            <DiagramCanvas
+              nodes={diffData?.nodesA ?? []}
+              edges={[]}
+              isDiff
+            />
+          </div>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 8, left: 12, fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', zIndex: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Query B
+            </div>
+            <DiagramCanvas
+              nodes={diffData?.nodesB ?? []}
+              edges={[]}
+              isDiff
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

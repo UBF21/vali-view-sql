@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { NODE_COLORS } from './index'
+import { NODE_COLORS, getDiffBorder } from './index'
 import type { SQLNodeData } from '@/types'
 
 export const JoinNode = memo(function JoinNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
@@ -9,7 +9,7 @@ export const JoinNode = memo(function JoinNode({ data, selected }: NodeProps<Nod
     <div
       style={{
         background: colors.bg,
-        border: `1.5px solid ${data.hasIssue ? '#E24B4A' : colors.border}`,
+        border: `1.5px solid ${getDiffBorder(data, colors.border)}`,
         borderRadius: 8,
         padding: '10px 14px',
         minWidth: 200,
