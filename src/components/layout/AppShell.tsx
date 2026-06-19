@@ -9,6 +9,7 @@ import { buildSteps, decorateNodesForStep, decorateEdgesForStep } from '@/lib/st
 import { useStepAnimation } from '@/hooks/useStepAnimation'
 import { StepperControls } from '@/components/diagram/StepperControls'
 import { ExportButton } from '@/components/diagram/ExportButton'
+import { ExamplePicker } from '@/components/editor/ExamplePicker'
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
@@ -123,8 +124,11 @@ export function AppShell() {
             overflow: 'hidden',
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            SQL Query
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              SQL Query
+            </div>
+            <ExamplePicker />
           </div>
           <QueryEditor
             value={query}
