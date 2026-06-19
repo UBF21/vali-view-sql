@@ -1,13 +1,15 @@
 import { useRef, useCallback } from 'react'
+import type { CSSProperties } from 'react'
 
 interface QueryEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  style?: CSSProperties
 }
 
-export function QueryEditor({ value, onChange, placeholder, className }: QueryEditorProps) {
+export function QueryEditor({ value, onChange, placeholder, className, style }: QueryEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleChange = useCallback(
@@ -54,6 +56,7 @@ export function QueryEditor({ value, onChange, placeholder, className }: QueryEd
         lineHeight: 1.6,
         outline: 'none',
         boxSizing: 'border-box',
+        ...style,
       }}
     />
   )
