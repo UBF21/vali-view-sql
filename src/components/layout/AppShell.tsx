@@ -5,6 +5,9 @@ import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
 import { PanelRight } from './PanelRight'
 import { DiffEditor } from '@/components/editor/DiffEditor'
 import { useDiff } from '@/hooks/useDiff'
+import { buildSteps, decorateNodesForStep, decorateEdgesForStep } from '@/lib/stepper/execution-steps'
+import { useStepAnimation } from '@/hooks/useStepAnimation'
+import { StepperControls } from '@/components/diagram/StepperControls'
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
@@ -18,6 +21,43 @@ export function AppShell() {
 
   const nodes: Node<SQLNodeData>[] = parseResult?.nodes ?? []
   const edges: Edge[] = parseResult?.edges ?? []
+
+  const steps = parseResult ? buildSteps(parseResult) : []
+  const stepAnimation = useStepAnimation(steps)
+
+  const stepNodes = parseResult
+    ? decorateNodesForStep(parseResult, steps, stepAnimation.currentIndex)
+    : []
+  const stepEdges = parseResult
+    ? decorateEdgesForStep(parseResult, steps, stepAnimation.currentIndex)
+    : []
+
+  if (mode === 'stepper') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <Header />
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Left panel: SQL editor */}
+          <div style={{
+            width: 340, flexShrink: 0, borderRight: '1px solid var(--border)',
+            padding: 12, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              SQL Query
+            </div>
+            <QueryEditor value={query} onChange={setQuery} style={{ flex: 1 }} />
+          </div>
+          {/* Diagram + stepper controls */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+              <DiagramCanvas nodes={stepNodes} edges={stepEdges} isLoading={isLoading} />
+            </div>
+            <StepperControls state={stepAnimation} />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (mode === 'diff') {
     return (

@@ -8,6 +8,7 @@ export const TableNode = memo(function TableNode({ data, selected }: NodeProps<N
   const colors = NODE_COLORS.table
   return (
     <div
+      className={data.isActive === true ? 'node-active' : undefined}
       style={{
         background: colors.bg,
         border: `1.5px solid ${getDiffBorder(data, colors.border)}`,

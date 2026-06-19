@@ -6,7 +6,9 @@ import type { SQLNodeData } from '@/types'
 export const OutputNode = memo(function OutputNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
   const colors = NODE_COLORS.output
   return (
-    <div style={{
+    <div
+      className={data.isActive === true ? 'node-active' : undefined}
+      style={{
       background: colors.bg, border: `1.5px solid ${getDiffBorder(data, colors.border)}`, borderRadius: 8,
       padding: '12px 16px', minWidth: 220, maxWidth: 280,
       opacity: data.isActive === false ? 0.3 : 1, transition: 'opacity 0.3s',

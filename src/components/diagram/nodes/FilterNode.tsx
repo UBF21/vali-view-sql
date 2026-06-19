@@ -7,6 +7,7 @@ export const FilterNode = memo(function FilterNode({ data, selected }: NodeProps
   const colors = NODE_COLORS.filter
   return (
     <div
+      className={data.isActive === true ? 'node-active' : undefined}
       style={{
         background: colors.bg,
         border: `1.5px solid ${getDiffBorder(data, colors.border)}`,
