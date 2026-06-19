@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { parseSQLAsync } from '@/lib/parser'
+import { runAnalyzers } from '@/lib/analyzers'
+import { generateSuggestions } from '@/lib/optimizer/suggestions'
 
 const DEBOUNCE_MS = 800
 
@@ -11,6 +13,8 @@ export function useParseQuery() {
   const setIsLoading = useAppStore((s) => s.setIsLoading)
   const setParseError = useAppStore((s) => s.setParseError)
   const addToHistory = useAppStore((s) => s.addToHistory)
+  const setIssues = useAppStore((s) => s.setIssues)
+  const setSuggestions = useAppStore((s) => s.setSuggestions)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -31,6 +35,13 @@ export function useParseQuery() {
         const result = await parseSQLAsync(query, dialect)
         setParseResult(result)
         setParseError(null)
+
+        const issues = runAnalyzers(result.rawAst, query, dialect)
+        setIssues(issues)
+
+        const suggestions = generateSuggestions(result.rawAst, issues, query)
+        setSuggestions(suggestions)
+
         if (!result.nodes.some((n) => n.data.hasIssue)) {
           addToHistory(query, dialect)
         }
@@ -45,5 +56,5 @@ export function useParseQuery() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [query, dialect, setParseResult, setIsLoading, setParseError, addToHistory])
+  }, [query, dialect, setParseResult, setIsLoading, setParseError, addToHistory, setIssues, setSuggestions])
 }
