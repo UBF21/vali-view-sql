@@ -1,6 +1,7 @@
-import { useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { DialectSelector } from '@/components/editor/DialectSelector'
+import { Toast } from '@/components/ui/Toast'
 import type { Dialect, AppMode } from '@/types'
 
 export function Header() {
@@ -10,19 +11,20 @@ export function Header() {
   const setDialect = useAppStore((s) => s.setDialect)
   const mode = useAppStore((s) => s.mode)
   const setMode = useAppStore((s) => s.setMode)
+  const [toastVisible, setToastVisible] = useState(false)
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
   }, [theme, setTheme])
 
   const copyLink = useCallback(() => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      // TODO: toast notification in a future batch
-      console.info('[Header] link copied')
-    }).catch(console.error)
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => setToastVisible(true))
+      .catch(console.error)
   }, [])
 
   return (
+    <>
     <header
       style={{
         height: 48,
@@ -117,5 +119,11 @@ export function Header() {
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
     </header>
+    <Toast
+      message="Link copied! 🔗"
+      visible={toastVisible}
+      onHide={() => setToastVisible(false)}
+    />
+    </>
   )
 }

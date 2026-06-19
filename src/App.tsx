@@ -2,9 +2,11 @@ import { useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import { AppShell } from '@/components/layout/AppShell'
 import { useParseQuery } from '@/hooks/useParseQuery'
+import { useURLSync } from '@/hooks/useURLSync'
 
 function AppInner() {
   useParseQuery()
+  useURLSync()
   return <AppShell />
 }
 
