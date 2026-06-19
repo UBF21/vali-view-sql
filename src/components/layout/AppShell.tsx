@@ -8,6 +8,7 @@ import { useDiff } from '@/hooks/useDiff'
 import { buildSteps, decorateNodesForStep, decorateEdgesForStep } from '@/lib/stepper/execution-steps'
 import { useStepAnimation } from '@/hooks/useStepAnimation'
 import { StepperControls } from '@/components/diagram/StepperControls'
+import { ExportButton } from '@/components/diagram/ExportButton'
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
@@ -157,6 +158,9 @@ export function AppShell() {
               edges={edges}
               isLoading={isLoading}
             />
+          </div>
+          <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
+            <ExportButton />
           </div>
         </div>
 
