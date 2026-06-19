@@ -24,7 +24,7 @@ describe('buildSteps — basic SELECT', () => {
     steps.forEach(step => {
       expect(step.id).toMatch(/^step-\d+$/)
       expect(step.nodeId).toBeTruthy()
-      expect(step.title).toContain('Step')
+      expect(step.title).toMatch(/^Step \d+: .+$/)
       expect(step.description).toBeTruthy()
       expect(Array.isArray(step.edgeIds)).toBe(true)
     })

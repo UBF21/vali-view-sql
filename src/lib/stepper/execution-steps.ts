@@ -54,7 +54,7 @@ export function buildSteps(result: ParseResult): Step[] {
       if (nodeType === 'filter') {
         // El parser emite label='WHERE' para WHERE y label='HAVING' para HAVING
         const isWhere = n.data.label === 'WHERE' || (n.data.clause as string).startsWith('WHERE')
-        const isHaving = n.data.label === 'HAVING' || (n.data.clause as string).startsWith('HAVING')
+        const isHaving = n.data.label === 'HAVING' || (n.data.clause as string).startsWith('HAVING') || (n.data.clause as string) === 'FILTER'
         // Detectar cuál pasada estamos: contar cuántos 'filter' ya procesamos
         const filterStepsSoFar = steps.filter(s =>
           result.nodes.find(node => node.id === s.nodeId)?.data.nodeType === 'filter'
