@@ -1,9 +1,9 @@
 import { memo } from 'react'
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
 import { NODE_COLORS } from './index'
 import type { SQLNodeData } from '@/types'
 
-export const JoinNode = memo(function JoinNode({ data, selected }: NodeProps<SQLNodeData>) {
+export const JoinNode = memo(function JoinNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
   const colors = NODE_COLORS.join
   return (
     <div
