@@ -22,6 +22,7 @@ export function useStepAnimation(steps: Step[]): StepAnimationState {
 
   // Reset cuando cambian los steps (nueva query parseada)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentIndex(0)
     setIsPlaying(false)
   }, [steps])

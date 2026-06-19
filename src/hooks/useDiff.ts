@@ -12,6 +12,7 @@ export function useDiff(): DiffDecorated | null {
 
   useEffect(() => {
     if (!query.trim() || !queryB.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDiffResult(null)
       return
     }

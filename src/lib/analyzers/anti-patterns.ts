@@ -26,6 +26,7 @@ export function detectAntiPatterns(ast: any): Issue[] {
   if (
     ast.columns === '*' ||
     (Array.isArray(ast.columns) &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ast.columns.some((c: any) =>
         c?.expr?.type === 'star' ||
         c === '*' ||
@@ -42,6 +43,7 @@ export function detectAntiPatterns(ast: any): Issue[] {
 
   // 2. Cartesian product (multiple tables in FROM without JOIN)
   const fromTables = Array.isArray(ast.from)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ? ast.from.filter((f: any) => f && !f.join && !f.expr)
     : []
   if (fromTables.length > 1 && (!ast.join || ast.join.length === 0)) {
@@ -56,6 +58,7 @@ export function detectAntiPatterns(ast: any): Issue[] {
   // 3. N+1 potential — subquery in SELECT columns
   if (Array.isArray(ast.columns)) {
     const hasCorrelatedSubquery = ast.columns.some(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (c: any) => c?.expr?.type === 'select' || c?.expr?.ast?.type === 'select'
     )
     if (hasCorrelatedSubquery) {
@@ -101,6 +104,7 @@ export function detectAntiPatterns(ast: any): Issue[] {
   // 7. OR in JOIN condition
   const hasOrInJoin =
     Array.isArray(ast.from) &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ast.from.some((f: any) => {
       const cond = f?.on
       return cond && JSON.stringify(cond).includes('"OR"')

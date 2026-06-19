@@ -12,6 +12,7 @@ export function detectDialectIssues(ast: any, sql: string, dialect: Dialect): Is
     // FULL OUTER JOIN — not supported in MySQL
     const hasFullJoin =
       Array.isArray(ast?.from) &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ast.from.some((f: any) => f?.join?.toLowerCase() === 'full join' || f?.join?.toLowerCase() === 'full outer join')
     if (hasFullJoin || /\bFULL\s+(?:OUTER\s+)?JOIN\b/i.test(sql)) {
       issues.push({
@@ -26,7 +27,9 @@ export function detectDialectIssues(ast: any, sql: string, dialect: Dialect): Is
 
     // GROUP BY without ONLY_FULL_GROUP_BY (non-aggregate column in SELECT)
     if (ast?.groupby && Array.isArray(ast?.columns)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const groupbyCols = (ast.groupby as any[]).map((g: any) => g?.column ?? g?.expr?.column)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nonGroupedCols = (ast.columns as any[]).filter((c: any) => {
         if (c?.expr?.type === 'aggr_func') return false  // aggregate — OK
         if (c?.expr?.type === 'star') return false
