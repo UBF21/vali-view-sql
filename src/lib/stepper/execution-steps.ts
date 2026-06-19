@@ -45,21 +45,26 @@ export function buildSteps(result: ParseResult): Step[] {
   const steps: Step[] = []
   let stepIndex = 0
 
-  // Bucle sobre el orden de ejecución
-  for (const nodeType of EXECUTION_ORDER) {
+  // Precalcular los índices de las dos apariciones de 'filter' en EXECUTION_ORDER
+  const filterOccurrences = EXECUTION_ORDER
+    .map((t, idx) => t === 'filter' ? idx : -1)
+    .filter(idx => idx !== -1)
+  // filterOccurrences[0] = primera aparición (WHERE)
+  // filterOccurrences[1] = segunda aparición (HAVING)
+
+  // Bucle sobre el orden de ejecución con índice para distinguir las dos pasadas de 'filter'
+  for (let i = 0; i < EXECUTION_ORDER.length; i++) {
+    const nodeType = EXECUTION_ORDER[i]
     // Encontrar nodos de este tipo, con discriminación WHERE vs HAVING para filter
     const matchingNodes = result.nodes.filter(n => {
       if (n.data.nodeType !== nodeType) return false
-      // Para filter: respetar el orden WHERE → HAVING
+      // Para filter: respetar el orden WHERE → HAVING usando el índice de posición
       if (nodeType === 'filter') {
-        // El parser emite label='WHERE' para WHERE y label='HAVING' para HAVING
-        const isWhere = n.data.label === 'WHERE' || (n.data.clause as string).startsWith('WHERE')
-        const isHaving = n.data.label === 'HAVING' || (n.data.clause as string).startsWith('HAVING') || (n.data.clause as string) === 'FILTER'
-        // Detectar cuál pasada estamos: contar cuántos 'filter' ya procesamos
-        const filterStepsSoFar = steps.filter(s =>
-          result.nodes.find(node => node.id === s.nodeId)?.data.nodeType === 'filter'
-        ).length
-        return filterStepsSoFar === 0 ? isWhere : isHaving
+        const clause = n.data.clause ?? ''
+        const isWhere = n.data.label === 'WHERE' || clause.startsWith('WHERE')
+        const isHaving = n.data.label === 'HAVING' || clause.startsWith('HAVING') || clause === 'FILTER'
+        const isFirstFilterPass = i === filterOccurrences[0]
+        return isFirstFilterPass ? isWhere : isHaving
       }
       return true
     })

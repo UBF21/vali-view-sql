@@ -83,3 +83,27 @@ describe('decorateNodesForStep', () => {
     expect(futureNode?.data.isActive).toBe(false)
   })
 })
+
+describe('decorateEdgesForStep', () => {
+  const sql = 'SELECT id FROM users WHERE active = true'
+  const result = parseSQL(sql, 'postgresql')
+  const steps = buildSteps(result)
+
+  it('returns result.edges unchanged when steps is empty', () => {
+    const decorated = decorateEdgesForStep(result, [], 0)
+    expect(decorated).toEqual(result.edges)
+  })
+
+  it('active step edges are animated', () => {
+    if (steps.length === 0) return
+    const decorated = decorateEdgesForStep(result, steps, 0)
+    const activeEdgeIds = new Set(steps[0].edgeIds)
+    decorated.forEach(edge => {
+      if (activeEdgeIds.has(edge.id ?? '')) {
+        expect((edge as Record<string, unknown>).animated).toBe(true)
+      } else {
+        expect((edge as Record<string, unknown>).animated).toBe(false)
+      }
+    })
+  })
+})
