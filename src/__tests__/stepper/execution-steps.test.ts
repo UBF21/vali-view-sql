@@ -100,9 +100,9 @@ describe('decorateEdgesForStep', () => {
     const activeEdgeIds = new Set(steps[0].edgeIds)
     decorated.forEach(edge => {
       if (activeEdgeIds.has(edge.id ?? '')) {
-        expect((edge as Record<string, unknown>).animated).toBe(true)
+        expect(edge.animated).toBe(true)
       } else {
-        expect((edge as Record<string, unknown>).animated).toBe(false)
+        expect(edge.animated).toBe(false)
       }
     })
   })

@@ -1,5 +1,5 @@
-import type { ParseResult, Step, NodeType } from '@/types'
-import type { Edge } from '@xyflow/react'
+import type { ParseResult, Step, NodeType, SQLNodeData } from '@/types'
+import type { Edge, Node } from '@xyflow/react'
 
 // Orden de ejecución SQL lógico
 const EXECUTION_ORDER: NodeType[] = [
@@ -38,7 +38,9 @@ const NODE_DESCRIPTIONS: Partial<Record<NodeType, string>> = {
 }
 
 function getEdgesFrom(nodeId: string, edges: Edge[]): string[] {
-  return edges.filter(e => e.source === nodeId).map(e => e.id)
+  return edges
+    .filter(e => e.source === nodeId && e.id != null)
+    .map(e => e.id!)
 }
 
 export function buildSteps(result: ParseResult): Step[] {
@@ -90,7 +92,7 @@ export function decorateNodesForStep(
   result: ParseResult,
   steps: Step[],
   currentStepIndex: number
-) {
+): Node<SQLNodeData>[] {
   if (steps.length === 0) return result.nodes
 
   const activeNodeId = steps[currentStepIndex]?.nodeId
@@ -118,7 +120,7 @@ export function decorateEdgesForStep(
   result: ParseResult,
   steps: Step[],
   currentStepIndex: number
-) {
+): Edge[] {
   if (steps.length === 0) return result.edges
   const activeEdgeIds = new Set(steps[currentStepIndex]?.edgeIds ?? [])
   return result.edges.map(edge => ({
