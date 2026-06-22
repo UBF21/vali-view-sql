@@ -96,19 +96,20 @@ describe('MobileNavSheet — descripciones de modo', () => {
 describe('MobileNavSheet — sección de dialect', () => {
   it('renderiza el selector de dialect', () => {
     render(<MobileNavSheet open onClose={vi.fn()} />)
-    expect(screen.getByRole('radiogroup', { name: 'SQL dialect' })).toBeDefined()
+    expect(screen.getByRole('button', { name: /sql dialect/i })).toBeDefined()
   })
 
-  it('marca el dialect activo como checked', () => {
+  it('muestra el dialect activo en el trigger', () => {
     mockDialect = 'mysql'
     render(<MobileNavSheet open onClose={vi.fn()} />)
-    expect(screen.getByRole('radio', { name: 'MySQL' }).getAttribute('aria-checked')).toBe('true')
-    expect(screen.getByRole('radio', { name: 'PostgreSQL' }).getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByText('MySQL')).toBeDefined()
   })
 
   it('llama setDialect al cambiar dialect', () => {
     render(<MobileNavSheet open onClose={vi.fn()} />)
-    fireEvent.click(screen.getByRole('radio', { name: 'SQL Server' }))
+    fireEvent.click(screen.getByRole('button', { name: /sql dialect/i }))
+    const options = screen.getAllByRole('option')
+    fireEvent.click(options.find(o => o.textContent?.includes('SQL Server'))!)
     expect(mockSetDialect).toHaveBeenCalledWith('sqlserver')
   })
 

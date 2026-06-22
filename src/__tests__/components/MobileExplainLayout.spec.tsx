@@ -49,9 +49,9 @@ afterEach(cleanup)
 describe('MobileExplainLayout', () => {
   it('renderiza los 3 tabs: Editor, Diagram y Analysis', () => {
     render(<MobileExplainLayout {...defaultProps} />)
-    expect(screen.getByText('✏️ Editor')).toBeDefined()
-    expect(screen.getByText('⬡ Diagram')).toBeDefined()
-    expect(screen.getByText('📊 Analysis')).toBeDefined()
+    expect(screen.getByText('Editor')).toBeDefined()
+    expect(screen.getByText('Diagram')).toBeDefined()
+    expect(screen.getByText('Analysis')).toBeDefined()
   })
 
   it('muestra el DiagramCanvas por defecto (defaultIndex=1)', () => {
@@ -63,7 +63,7 @@ describe('MobileExplainLayout', () => {
 
   it('cambia a la vista Editor al hacer click en su tab', () => {
     render(<MobileExplainLayout {...defaultProps} />)
-    fireEvent.click(screen.getByText('✏️ Editor'))
+    fireEvent.click(screen.getByText('Editor'))
     expect(screen.getByTestId('query-editor')).toBeDefined()
     expect(screen.getByTestId('history-picker')).toBeDefined()
     expect(screen.getByTestId('example-picker')).toBeDefined()
@@ -72,7 +72,7 @@ describe('MobileExplainLayout', () => {
 
   it('cambia a la vista Analysis al hacer click en su tab', () => {
     render(<MobileExplainLayout {...defaultProps} />)
-    fireEvent.click(screen.getByText('📊 Analysis'))
+    fireEvent.click(screen.getByText('Analysis'))
     expect(screen.getByTestId('panel-right')).toBeDefined()
     expect(screen.queryByTestId('diagram-canvas')).toBeNull()
   })
