@@ -26,7 +26,7 @@ function nodeHeader(nx: number, ny: number, id: string, pal: Palette): string {
     `<path d="M${nx+8},${ny} Q${nx},${ny} ${nx},${ny+8} L${nx},${ny+28} L${nx+160},${ny+28} L${nx+160},${ny+8} Q${nx+160},${ny} ${nx+152},${ny} Z" style="fill:var(--sqla-h);"/>`,
     `<circle cx="${nx+17}" cy="${ny+14}" r="4" style="fill:var(--sqla-c);"/>`,
     `<text id="sqla-tn-${id}" x="${nx+28}" y="${ny+19}" font-family="${MF}" font-size="11" font-weight="600" fill="${pal.textP}">${id}</text>`,
-    `<line x1="${nx}" y1="${ny+28}" x2="${nx+160}" y2="${ny+28}" stroke="${pal.sep}" stroke-width="1"/>`,
+    `<line x1="${nx}" y1="${ny+28}" x2="${nx+160}" y2="${ny+28}" stroke="${pal.sep}" stroke-width=".5"/>`,
   ].join('')
 }
 
@@ -58,8 +58,8 @@ function mkHelpers(pal: Palette) {
   const buildNode = (id: string, pos: [number, number], barW: number, cols: string[]): string => {
     const [nx, ny] = pos
     return [
-      `<g id="sqla-node-${id}" style="opacity:0;transform-box:fill-box;transform-origin:center;">`,
-      R(nx, ny, [160, 128], { rx: 8, style: `fill:${pal.nodeFill};stroke:var(--sqla-c);stroke-width:1.5;` }),
+      `<g id="sqla-node-${id}" style="opacity:0;transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 0 10px var(--sqla-c));">`,
+      R(nx, ny, [160, 128], { rx: 8, style: `fill:${pal.nodeFill};stroke:var(--sqla-c);stroke-width:1;stroke-opacity:.7;` }),
       nodeHeader(nx, ny, id, pal),
       ...cols,
       `<text id="sqla-rows-${id}" x="${nx+9}" y="${ny+99}" font-family="${MF}" font-size="7.5" font-style="italic" fill="${pal.textS}" opacity=".55">~0 rows</text>`,
@@ -112,7 +112,7 @@ function buildEdgeLabels(): string {
 export function buildSVG(theme: Theme, pal: Palette): string {
   const { color: c, header: h, name: n } = theme
   return [
-    `<svg id="sqla-svg" viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;--sqla-c:${c};--sqla-h:${h};">`,
+    `<svg id="sqla-svg" viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" style="display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100%,800px);height:min(100%,480px);--sqla-c:${c};--sqla-h:${h};">`,
     buildDefs(pal),
     R(0, 0, [800, 480], { fill: pal.bg }),
     R(0, 0, [800, 480], { fill: 'url(#sqla-grid)' }),

@@ -46,7 +46,7 @@ export function play(container: HTMLElement, opts: PlayOptions = {}) {
   container.style.position = 'relative'
   const overlay = document.createElement('div')
   overlay.className = 'sqla-overlay'
-  overlay.style.cssText = `position:absolute;inset:0;z-index:200;overflow:hidden;background:${pal.bg};`
+  overlay.style.cssText = `position:absolute;inset:0;z-index:200;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,${pal.bg}ee 0%,${pal.bg} 70%);`
   overlay.innerHTML = buildOverlayHTML(pal.scan) + buildSVG(theme, pal)
   container.appendChild(overlay)
   animate(overlay as HTMLDivElement, theme, muted, onComplete)
