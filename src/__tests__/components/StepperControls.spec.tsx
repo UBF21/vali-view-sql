@@ -10,6 +10,9 @@ vi.mock('framer-motion', () => ({
     div: ({ children, style, onClick, title }: React.HTMLAttributes<HTMLDivElement> & { title?: string }) => (
       <div style={style} onClick={onClick} title={title}>{children}</div>
     ),
+    button: ({ children, style, onClick, title, 'aria-label': ariaLabel }: React.ButtonHTMLAttributes<HTMLButtonElement> & { title?: string }) => (
+      <button style={style} onClick={onClick} title={title} aria-label={ariaLabel}>{children}</button>
+    ),
   },
 }))
 

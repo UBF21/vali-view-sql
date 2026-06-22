@@ -62,11 +62,15 @@ export function useStepAnimation(steps: Step[]): StepAnimationState {
   const stop = useCallback(() => setIsPlaying(false), [])
   useAutoPlay({ isPlaying, total: steps.length, speed, setIndex: setCurrentIndex, stop })
 
-  const goNext     = useCallback(() => setCurrentIndex(p => Math.min(p + 1, steps.length - 1)), [steps.length])
+  const goNext     = useCallback(() => { if (steps.length === 0) return; setCurrentIndex(p => Math.min(p + 1, steps.length - 1)) }, [steps.length])
   const goPrev     = useCallback(() => setCurrentIndex(p => Math.max(p - 1, 0)), [])
   const goReset    = useCallback(() => { setCurrentIndex(0); setIsPlaying(false) }, [])
-  const goToEnd    = useCallback(() => { setCurrentIndex(steps.length - 1); setIsPlaying(false) }, [steps.length])
-  const togglePlay = useCallback(() => setIsPlaying(p => !p), [])
+  const goToEnd    = useCallback(() => { if (steps.length === 0) return; setCurrentIndex(steps.length - 1); setIsPlaying(false) }, [steps.length])
+  const togglePlay = useCallback(() => {
+    const atEnd = steps.length > 0 && currentIndex === steps.length - 1
+    if (atEnd) { setCurrentIndex(0); setIsPlaying(true); return }
+    setIsPlaying(p => !p)
+  }, [currentIndex, steps.length])
   const goToIndex  = useCallback((i: number) => { setIsPlaying(false); setCurrentIndex(Math.max(0, Math.min(i, steps.length - 1))) }, [steps.length])
 
   return {

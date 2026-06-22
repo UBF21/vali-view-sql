@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Code2, AlertTriangle, BookOpen, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, X, LayoutGrid } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { Header } from './Header'
@@ -35,7 +35,10 @@ export function AppShell() {
   const nodes: Node<SQLNodeData>[] = parseResult?.nodes ?? []
   const edges: Edge[] = parseResult?.edges ?? []
 
-  const steps = parseResult ? buildSteps(parseResult) : []
+  const steps = useMemo(
+    () => parseResult ? buildSteps(parseResult) : [],
+    [parseResult]
+  )
   const stepAnimation = useStepAnimation(steps)
 
   const stepAnimRef = useRef(stepAnimation)
@@ -45,7 +48,8 @@ export function AppShell() {
     if (mode !== 'stepper') return
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
-      if (tag === 'TEXTAREA' || tag === 'INPUT') return
+      const isEditable = tag === 'TEXTAREA' || tag === 'INPUT' || (e.target as HTMLElement).isContentEditable
+      if (isEditable) return
       const sa = stepAnimRef.current
       switch (e.key) {
         case 'ArrowRight': sa.goNext(); break

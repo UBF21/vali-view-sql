@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-import { SkipBack, SkipForward, ChevronLeft, Play, Pause, ChevronRight } from 'lucide-react'
+import { SkipBack, SkipForward, ChevronLeft, Play, Pause, ChevronRight, RotateCcw } from 'lucide-react'
 import type { StepAnimationState, StepSpeed } from '@/hooks/useStepAnimation'
 
 interface StepperControlsProps {
@@ -105,15 +105,19 @@ function playBtnStyle(isPlaying: boolean): React.CSSProperties {
 }
 
 function ControlButtons({ state }: { state: StepAnimationState }) {
-  const { currentIndex, isPlaying, totalSteps, goNext, goPrev, goReset, goToEnd, togglePlay } = state
+  const { currentIndex, isPlaying, isComplete, totalSteps, goNext, goPrev, goReset, goToEnd, togglePlay } = state
   const atStart = currentIndex === 0
   const atEnd = currentIndex >= totalSteps - 1
+
+  const playIcon = isPlaying ? <Pause size={14} /> : isComplete ? <RotateCcw size={14} /> : <Play size={14} />
+  const playLabel = isPlaying ? 'Pause' : isComplete ? 'Restart from step 1' : 'Play'
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <button onClick={goReset} disabled={atStart} aria-label="First step" style={navBtnStyle(atStart)}><SkipBack size={12} /></button>
+      <button onClick={goReset} disabled={atStart && !isComplete} aria-label="First step" style={navBtnStyle(atStart && !isComplete)}><SkipBack size={12} /></button>
       <button onClick={goPrev} disabled={atStart} aria-label="Previous step" style={navBtnStyle(atStart)}><ChevronLeft size={12} /></button>
-      <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} style={playBtnStyle(isPlaying)}>
-        {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+      <button onClick={togglePlay} aria-label={playLabel} style={playBtnStyle(isPlaying)}>
+        {playIcon}
       </button>
       <button onClick={goNext} disabled={atEnd} aria-label="Next step" style={navBtnStyle(atEnd)}><ChevronRight size={12} /></button>
       <button onClick={goToEnd} disabled={atEnd} aria-label="Last step" style={navBtnStyle(atEnd)}><SkipForward size={12} /></button>
@@ -129,15 +133,16 @@ function ProgressDots({ state }: { state: StepAnimationState }) {
   return (
     <div style={{ display: 'flex', gap: 4, marginLeft: 4, flexWrap: 'wrap', alignItems: 'center' }}>
       {Array.from({ length: visible }).map((_, i) => (
-        <motion.div
+        <motion.button
           key={i}
           animate={{
             scale: i === currentIndex ? 1.4 : 1,
             background: i === currentIndex ? 'var(--a)' : i < currentIndex ? 'var(--text-2)' : 'var(--border)',
           }}
           onClick={() => goToIndex(i)}
+          aria-label={`Go to step ${i + 1}`}
           title={`Step ${i + 1}`}
-          style={{ width: 7, height: 7, borderRadius: '50%', cursor: 'pointer', flexShrink: 0 }}
+          style={{ width: 7, height: 7, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, border: 'none', padding: 0 }}
         />
       ))}
       {totalSteps > 12 && (
