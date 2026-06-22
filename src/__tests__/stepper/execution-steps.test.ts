@@ -107,3 +107,59 @@ describe('decorateEdgesForStep', () => {
     })
   })
 })
+
+describe('buildSteps — contextual descriptions', () => {
+  it('filter step includes the WHERE clause in description', () => {
+    const result = parseSQL('SELECT id FROM users WHERE active = true', 'postgresql')
+    const steps = buildSteps(result)
+    const filterStep = steps.find(s =>
+      result.nodes.find(n => n.id === s.nodeId)?.data.nodeType === 'filter'
+    )
+    expect(filterStep).toBeDefined()
+    expect(filterStep!.description).toContain('WHERE')
+    expect(filterStep!.clause).toBeTruthy()
+  })
+
+  it('step has clause field matching node.data.clause', () => {
+    const result = parseSQL('SELECT * FROM orders ORDER BY created_at DESC', 'postgresql')
+    const steps = buildSteps(result)
+    steps.forEach(step => {
+      const node = result.nodes.find(n => n.id === step.nodeId)
+      if (node?.data.clause) {
+        expect(step.clause).toBe(node.data.clause)
+      }
+    })
+  })
+})
+
+describe('buildSteps — JOIN + WHERE', () => {
+  const sql = `
+    SELECT u.id, o.total
+    FROM users u
+    JOIN orders o ON u.id = o.user_id
+    WHERE o.total > 100
+    ORDER BY o.total DESC
+  `
+  const result = parseSQL(sql, 'postgresql')
+
+  it('generates steps containing table, join, filter, output, sort types', () => {
+    const steps = buildSteps(result)
+    const types = steps.map(s =>
+      result.nodes.find(n => n.id === s.nodeId)?.data.nodeType
+    )
+    expect(types).toContain('table')
+    expect(types).toContain('join')
+    expect(types).toContain('filter')
+    expect(types).toContain('output')
+    expect(types).toContain('sort')
+  })
+
+  it('table comes before join, join before filter', () => {
+    const steps = buildSteps(result)
+    const idx = (type: string) => steps.findIndex(s =>
+      result.nodes.find(n => n.id === s.nodeId)?.data.nodeType === type
+    )
+    expect(idx('table')).toBeLessThan(idx('join'))
+    expect(idx('join')).toBeLessThan(idx('filter'))
+  })
+})

@@ -1,7 +1,11 @@
 import type { ParseResult, Step, NodeType, SQLNodeData } from '@/types'
 import type { Edge, Node } from '@xyflow/react'
 
-// Orden de ejecución SQL lógico
+// Orden de ejecución SQL lógico.
+// NOTA: 'filter' aparece dos veces intencionalmente:
+//   primera aparición = cláusula WHERE (se procesa antes de GROUP BY)
+//   segunda aparición = cláusula HAVING / FILTER (se procesa después de GROUP BY)
+// No eliminar ninguna de las dos entradas sin revisar buildSteps().
 const EXECUTION_ORDER: NodeType[] = [
   'table', 'cte', 'temp_table',
   'param',
@@ -35,6 +39,24 @@ const NODE_DESCRIPTIONS: Partial<Record<NodeType, string>> = {
   subquery:   'Subquery: an inner SELECT is evaluated as a derived table.',
   setop:      'Set operation: two result sets are combined.',
   procedure:  'Stored procedure: the body starts executing.',
+}
+
+function truncateClause(clause: string, max = 72): string {
+  return clause.length > max ? `${clause.slice(0, max)}…` : clause
+}
+
+function buildContextualDescription(nodeType: NodeType, clause: string): string {
+  const base = NODE_DESCRIPTIONS[nodeType] ?? `Execute ${nodeType} step.`
+  if (!clause) return base
+  const c = truncateClause(clause)
+  switch (nodeType) {
+    case 'filter':    return `Filter: keeps rows matching \`${c}\`.`
+    case 'join':      return `JOIN: matches rows using \`${c}\`.`
+    case 'aggregate': return `GROUP BY \`${c}\`: rows grouped and aggregated.`
+    case 'sort':      return `Sorted by \`${c}\`.`
+    case 'limit':     return `\`${c}\`: only the first N rows are returned.`
+    default:          return base
+  }
 }
 
 function getEdgesFrom(nodeId: string, edges: Edge[]): string[] {
@@ -72,13 +94,15 @@ export function buildSteps(result: ParseResult): Step[] {
     })
 
     for (const node of matchingNodes) {
-      const description = NODE_DESCRIPTIONS[nodeType] ?? `Execute ${nodeType} step.`
+      const clause = node.data.clause ?? ''
+      const description = buildContextualDescription(nodeType, clause)
       steps.push({
         id: `step-${stepIndex}`,
         nodeId: node.id,
         title: `Step ${stepIndex + 1}: ${node.data.label}`,
         description,
         edgeIds: getEdgesFrom(node.id, result.edges),
+        clause: clause || undefined,
       })
       stepIndex++
     }
