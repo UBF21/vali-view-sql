@@ -1,5 +1,7 @@
 import type { Node, Edge } from '@xyflow/react'
 
+export type { Node, Edge }
+
 export type Dialect = 'postgresql' | 'mysql' | 'sqlserver'
 
 export type NodeType =
@@ -78,6 +80,7 @@ export interface Step {
   title: string
   description: string
   edgeIds: string[]
+  clause?: string
 }
 
 export interface Example {
