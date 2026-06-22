@@ -2,9 +2,68 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vali-ViewSql</title>
+
+    <!-- Primary SEO -->
+    <title>ViewSQL — Visualize, Explain & Diff SQL Queries</title>
+    <meta name="description" content="ViewSQL is a free, interactive SQL visualizer. Paste any SQL query and instantly get a diagram, execution steps, side-by-side diff, and optimization tips. Supports PostgreSQL, MySQL and SQL Server." />
+    <meta name="keywords" content="SQL visualizer, SQL diagram, SQL explainer, SQL query analyzer, PostgreSQL, MySQL, SQL Server, SQL optimizer, query plan" />
+    <meta name="author" content="ViewSQL" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#863bff" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="%VITE_APP_URL%" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ViewSQL" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="%VITE_APP_URL%" />
+    <meta property="og:title" content="ViewSQL — Visualize, Explain & Diff SQL Queries" />
+    <meta property="og:description" content="Free SQL visualizer: paste a query and get an interactive diagram, step-by-step execution, diff between two queries, and smart optimization suggestions." />
+    <meta property="og:image" content="%VITE_APP_URL%/og-image.png" />
+    <meta property="og:image:alt" content="ViewSQL — SQL query visualized as an interactive node diagram" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ViewSQL — Visualize, Explain & Diff SQL Queries" />
+    <meta name="twitter:description" content="Free SQL visualizer: paste a query and get an interactive diagram, step-by-step execution, diff between two queries, and smart optimization suggestions." />
+    <meta name="twitter:image" content="%VITE_APP_URL%/og-image.png" />
+    <meta name="twitter:image:alt" content="ViewSQL SQL query diagram" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ViewSQL",
+      "url": "%VITE_APP_URL%",
+      "description": "Free interactive SQL visualizer. Paste any SQL query and get a diagram, execution steps, diff and optimization tips.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "SQL query diagram visualization",
+        "Step-by-step execution mode",
+        "Side-by-side SQL diff",
+        "Query optimization suggestions",
+        "PostgreSQL, MySQL and SQL Server support"
+      ]
+    }
+    </script>
+
+    <!-- Icons & Manifest -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body>
     <div id="root"></div>
