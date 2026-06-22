@@ -45,7 +45,7 @@ function mkHelpers(pal: Palette) {
 
   const col = (pos: [number, number], nm: string, tp: string, tc: string): string =>
     T(pos[0], pos[1], nm, { 'font-size': 9, fill: pal.textS })
-    + T(pos[0] + 118, pos[1], tp, { 'font-size': 8, fill: tc })
+    + T(pos[0] + 106, pos[1], tp, { 'font-size': 8, fill: tc })
 
   const colPK = (bx: number, by: number, nx: number, nm: string): string =>
     PK(bx, by) + T(nx, by + 8, nm, { 'font-size': 9, fill: pal.textP })
@@ -53,7 +53,7 @@ function mkHelpers(pal: Palette) {
   const colFK = (bx: number, by: number, nx: number, opts: { nm: string; tp: string; tc?: string }): string =>
     FK(bx, by)
     + T(nx, by + 8, opts.nm, { 'font-size': 9, fill: pal.textS })
-    + T(nx + 118, by + 8, opts.tp, { 'font-size': 8, fill: opts.tc ?? pal.tInt })
+    + T(nx + 106, by + 8, opts.tp, { 'font-size': 8, fill: opts.tc ?? pal.tInt })
 
   const buildNode = (id: string, pos: [number, number], barW: number, cols: string[]): string => {
     const [nx, ny] = pos
@@ -112,7 +112,7 @@ function buildEdgeLabels(): string {
 export function buildSVG(theme: Theme, pal: Palette): string {
   const { color: c, header: h, name: n } = theme
   return [
-    `<svg id="sqla-svg" viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;--sqla-c:${c};--sqla-h:${h};">`,
+    `<svg id="sqla-svg" viewBox="0 0 800 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;--sqla-c:${c};--sqla-h:${h};">`,
     buildDefs(pal),
     R(0, 0, [800, 480], { fill: pal.bg }),
     R(0, 0, [800, 480], { fill: 'url(#sqla-grid)' }),
