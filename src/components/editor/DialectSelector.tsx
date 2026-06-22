@@ -1,48 +1,29 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { siPostgresql, siMysql } from 'simple-icons'
 import type { Dialect } from '@/types'
 
 // ── Dialect icons ─────────────────────────────────────────────────────────────
 
-function PgIcon({ size = 24 }: { size?: number }) {
+function SimpleIcon({ icon, size = 24, color }: { icon: { path: string }; size?: number; color: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
-      <rect width="32" height="32" rx="7" fill="#336791" />
-      <ellipse cx="7.5" cy="13" rx="3.5" ry="4.5" fill="rgba(255,255,255,0.5)" />
-      <ellipse cx="24.5" cy="13" rx="3.5" ry="4.5" fill="rgba(255,255,255,0.5)" />
-      <ellipse cx="16" cy="14" rx="7.5" ry="7" fill="white" />
-      <circle cx="13" cy="12.5" r="1.5" fill="#336791" />
-      <circle cx="19" cy="12.5" r="1.5" fill="#336791" />
-      <path d="M 12.5 18 Q 16 20.5 19.5 18" stroke="#336791" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      <path d="M 11 20 Q 8 24 10 27" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+    <svg role="img" viewBox="0 0 24 24" width={size} height={size} fill={color} aria-hidden>
+      <path d={icon.path} />
     </svg>
   )
+}
+
+function PgIcon({ size = 24 }: { size?: number }) {
+  return <SimpleIcon icon={siPostgresql} size={size} color={`#${siPostgresql.hex}`} />
 }
 
 function MyIcon({ size = 24 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
-      <rect width="32" height="32" rx="7" fill="#F97316" />
-      <path d="M 5 22 Q 10 8 18 10 Q 24 12 26 8" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <path d="M 16 10 Q 17 4 20 8" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <path d="M 25 9 Q 29 6 30 11 Q 28 15 25 12" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <circle cx="7" cy="20" r="1.8" fill="white" />
-      <path d="M 12 16 Q 10 20 14 20" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-    </svg>
-  )
+  return <SimpleIcon icon={siMysql} size={size} color={`#${siMysql.hex}`} />
 }
 
 function MsIcon({ size = 24 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden>
-      <rect width="32" height="32" rx="7" fill="#CC2927" />
-      <ellipse cx="16" cy="9" rx="8" ry="3" fill="rgba(255,255,255,0.85)" />
-      <rect x="8" y="9" width="16" height="12" fill="rgba(255,255,255,0.65)" />
-      <ellipse cx="16" cy="21" rx="8" ry="3" fill="rgba(255,255,255,0.85)" />
-      <ellipse cx="16" cy="15" rx="8" ry="2.2" fill="rgba(255,255,255,0.4)" />
-    </svg>
-  )
+  return <img src="/icons/sqlserver.png" width={size} height={size} alt="SQL Server" style={{ objectFit: 'contain' }} />
 }
 
 // ── Dialect config ────────────────────────────────────────────────────────────
@@ -59,9 +40,9 @@ export interface DialectOption {
 }
 
 export const DIALECTS: DialectOption[] = [
-  { value: 'postgresql', label: 'PostgreSQL', abbr: 'PG', desc: 'Open-source object-relational', color: '#5B9BD5', bg: 'rgba(91,155,213,0.14)',  border: 'rgba(91,155,213,0.30)',  Icon: PgIcon },
-  { value: 'mysql',      label: 'MySQL',      abbr: 'MY', desc: 'Oracle open-source RDBMS',     color: '#F97316', bg: 'rgba(249,115,22,0.14)',  border: 'rgba(249,115,22,0.30)',  Icon: MyIcon },
-  { value: 'sqlserver',  label: 'SQL Server', abbr: 'MS', desc: 'Microsoft enterprise RDBMS',   color: '#E04444', bg: 'rgba(224,68,68,0.14)',   border: 'rgba(224,68,68,0.30)',   Icon: MsIcon },
+  { value: 'postgresql', label: 'PostgreSQL', abbr: 'PG', desc: 'Open-source object-relational', color: `#${siPostgresql.hex}`, bg: 'rgba(65,105,225,0.12)', border: 'rgba(65,105,225,0.30)', Icon: PgIcon },
+  { value: 'mysql',      label: 'MySQL',      abbr: 'MY', desc: 'Oracle open-source RDBMS',     color: `#${siMysql.hex}`,      bg: 'rgba(68,121,161,0.12)', border: 'rgba(68,121,161,0.30)', Icon: MyIcon },
+  { value: 'sqlserver',  label: 'SQL Server', abbr: 'MS', desc: 'Microsoft enterprise RDBMS',   color: '#CC2927',               bg: 'rgba(204,41,39,0.12)',  border: 'rgba(204,41,39,0.30)',  Icon: MsIcon },
 ]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
