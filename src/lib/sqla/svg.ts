@@ -112,7 +112,7 @@ function buildEdgeLabels(): string {
 export function buildSVG(theme: Theme, pal: Palette): string {
   const { color: c, header: h, name: n } = theme
   return [
-    `<svg id="sqla-svg" viewBox="0 0 800 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;--sqla-c:${c};--sqla-h:${h};">`,
+    `<svg id="sqla-svg" viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;--sqla-c:${c};--sqla-h:${h};">`,
     buildDefs(pal),
     R(0, 0, [800, 480], { fill: pal.bg }),
     R(0, 0, [800, 480], { fill: 'url(#sqla-grid)' }),
