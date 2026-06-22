@@ -9,19 +9,22 @@ const VALID_MODES: AppMode[] = ['explain', 'diff', 'stepper']
 function readFromURL() {
   const params = new URLSearchParams(window.location.search)
   const q = params.get('q')
+  const qb = params.get('qb')
   const d = params.get('d') as Dialect | null
   const m = params.get('mode') as AppMode | null
   return {
     query: q ? decodeURIComponent(q) : null,
+    queryB: qb ? decodeURIComponent(qb) : null,
     dialect: d && VALID_DIALECTS.includes(d) ? d : null,
     mode: m && VALID_MODES.includes(m) ? m : null,
   }
 }
 
 // Escribe el estado actual a la URL sin recargar
-function writeToURL(query: string, dialect: Dialect, mode: AppMode) {
+function writeToURL(query: string, queryB: string, dialect: Dialect, mode: AppMode) {
   const params = new URLSearchParams()
   if (query.trim()) params.set('q', encodeURIComponent(query))
+  if (queryB.trim()) params.set('qb', encodeURIComponent(queryB))
   params.set('d', dialect)
   params.set('mode', mode)
   const newUrl = `${window.location.pathname}?${params.toString()}`
@@ -30,9 +33,11 @@ function writeToURL(query: string, dialect: Dialect, mode: AppMode) {
 
 export function useURLSync() {
   const query = useAppStore((s) => s.query)
+  const queryB = useAppStore((s) => s.queryB)
   const dialect = useAppStore((s) => s.dialect)
   const mode = useAppStore((s) => s.mode)
   const setQuery = useAppStore((s) => s.setQuery)
+  const setQueryB = useAppStore((s) => s.setQueryB)
   const setDialect = useAppStore((s) => s.setDialect)
   const setMode = useAppStore((s) => s.setMode)
   const initializedRef = useRef(false)
@@ -41,15 +46,16 @@ export function useURLSync() {
   useEffect(() => {
     if (initializedRef.current) return
     initializedRef.current = true
-    const { query: urlQuery, dialect: urlDialect, mode: urlMode } = readFromURL()
+    const { query: urlQuery, queryB: urlQueryB, dialect: urlDialect, mode: urlMode } = readFromURL()
     if (urlQuery) setQuery(urlQuery)
+    if (urlQueryB) setQueryB(urlQueryB)
     if (urlDialect) setDialect(urlDialect)
     if (urlMode) setMode(urlMode)
-  }, [setQuery, setDialect, setMode])
+  }, [setQuery, setQueryB, setDialect, setMode])
 
   // Al cambiar estado: actualizar URL
   useEffect(() => {
     if (!initializedRef.current) return
-    writeToURL(query, dialect, mode)
-  }, [query, dialect, mode])
+    writeToURL(query, queryB, dialect, mode)
+  }, [query, queryB, dialect, mode])
 }

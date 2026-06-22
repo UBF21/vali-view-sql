@@ -1,10 +1,11 @@
+import { X, AlertTriangle, Info, Lightbulb, CheckCircle } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import type { Issue } from '@/types'
 
-const SEVERITY_CONFIG = {
-  error: { color: '#E24B4A', bg: '#FFF1F0', label: 'Error', icon: '✕' },
-  warning: { color: '#EF9F27', bg: '#FFFBF0', label: 'Warning', icon: '△' },
-  info: { color: '#1D9E75', bg: '#F0FDF9', label: 'Info', icon: 'ℹ' },
+const SEVERITY_CONFIG: Record<string, { color: string; bg: string; label: string; icon: React.ReactNode }> = {
+  error: { color: '#E24B4A', bg: '#FFF1F0', label: 'Error', icon: <X size={12} /> },
+  warning: { color: '#EF9F27', bg: '#FFFBF0', label: 'Warning', icon: <AlertTriangle size={12} /> },
+  info: { color: '#1D9E75', bg: '#F0FDF9', label: 'Info', icon: <Info size={12} /> },
 }
 
 function IssueCard({ issue }: { issue: Issue }) {
@@ -31,8 +32,8 @@ function IssueCard({ issue }: { issue: Issue }) {
       <p style={{ margin: '0 0 6px', fontSize: 11, color: '#444', lineHeight: 1.5 }}>
         {issue.description}
       </p>
-      <p style={{ margin: 0, fontSize: 11, color: config.color, lineHeight: 1.4, fontStyle: 'italic' }}>
-        💡 {issue.suggestion}
+      <p style={{ margin: 0, fontSize: 11, color: config.color, lineHeight: 1.4, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <Lightbulb size={12} /> {issue.suggestion}
       </p>
       {issue.dialectNote && (
         <span style={{ fontSize: 10, color: '#888', marginTop: 4, display: 'block' }}>
@@ -48,8 +49,8 @@ export function IssuesPanel() {
 
   if (issues.length === 0) {
     return (
-      <div style={{ padding: 16, color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center' }}>
-        No issues detected. ✓
+      <div style={{ padding: 16, color: 'var(--text-secondary)', fontSize: 13, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <CheckCircle size={14} /> No issues detected.
       </div>
     )
   }

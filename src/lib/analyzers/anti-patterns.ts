@@ -16,6 +16,30 @@ const makeIssue = (
   nodeId,
 })
 
+function hasOrOperator(node: unknown): boolean {
+  if (!node || typeof node !== 'object') return false
+  const n = node as Record<string, unknown>
+  if (typeof n.operator === 'string' && n.operator.toUpperCase() === 'OR') return true
+  return Object.values(n).some(v => hasOrOperator(v))
+}
+
+function findLeadingWildcardLike(node: unknown): string | null {
+  if (!node || typeof node !== 'object') return null
+  const n = node as Record<string, unknown>
+  if (
+    typeof n.operator === 'string' &&
+    n.operator.toUpperCase() === 'LIKE' &&
+    n.right &&
+    typeof (n.right as Record<string, unknown>).value === 'string' &&
+    ((n.right as Record<string, unknown>).value as string).startsWith('%')
+  ) return (n.right as Record<string, unknown>).value as string
+  for (const v of Object.values(n)) {
+    const found = findLeadingWildcardLike(v)
+    if (found !== null) return found
+  }
+  return null
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function detectAntiPatterns(ast: any): Issue[] {
   _issueCounter = 0
@@ -107,7 +131,7 @@ export function detectAntiPatterns(ast: any): Issue[] {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ast.from.some((f: any) => {
       const cond = f?.on
-      return cond && JSON.stringify(cond).includes('"OR"')
+      return cond && hasOrOperator(cond)
     })
   if (hasOrInJoin) {
     issues.push(makeIssue(
@@ -135,8 +159,8 @@ export function detectAntiPatterns(ast: any): Issue[] {
 
   // 9. LIKE with leading wildcard
   if (ast.where) {
-    const likePattern = ast.where?.right?.value ?? ''
-    if (typeof likePattern === 'string' && likePattern.startsWith('%')) {
+    const likePattern = findLeadingWildcardLike(ast.where)
+    if (likePattern !== null) {
       issues.push(makeIssue(
         'warning',
         'LIKE with leading wildcard',

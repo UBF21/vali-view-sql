@@ -91,6 +91,57 @@ WHERE (
 ORDER BY u.name`,
   },
 
+  {
+    id: 'pg-multi-join',
+    title: 'Multi-table JOIN',
+    dialect: 'postgresql',
+    category: 'join',
+    description: 'INNER JOIN + two LEFT JOINs across four tables.',
+    sql: `SELECT
+  o.id     AS order_id,
+  c.name   AS customer,
+  e.name   AS salesperson,
+  sh.name  AS shipper
+FROM orders o
+INNER JOIN customers c ON o.customer_id    = c.id
+LEFT JOIN  employees e ON o.salesperson_id = e.id
+LEFT JOIN  shippers sh ON o.shipper_id     = sh.id
+WHERE o.status = 'completed'
+ORDER BY o.id DESC`,
+  },
+  {
+    id: 'pg-upsert',
+    title: 'INSERT … ON CONFLICT (Upsert)',
+    dialect: 'postgresql',
+    category: 'basic',
+    description: 'Inserts or updates on primary key conflict.',
+    sql: `INSERT INTO product_prices (product_id, price, updated_at)
+VALUES (42, 19.99, NOW())
+ON CONFLICT (product_id)
+DO UPDATE SET
+  price      = EXCLUDED.price,
+  updated_at = EXCLUDED.updated_at`,
+  },
+  {
+    id: 'pg-case',
+    title: 'CASE WHEN — Tier Classification',
+    dialect: 'postgresql',
+    category: 'basic',
+    description: 'Classifies orders into tiers with a CASE expression.',
+    sql: `SELECT
+  id,
+  total,
+  CASE
+    WHEN total >= 1000 THEN 'platinum'
+    WHEN total >= 500  THEN 'gold'
+    WHEN total >= 100  THEN 'silver'
+    ELSE 'bronze'
+  END AS tier
+FROM orders
+WHERE status = 'completed'
+ORDER BY total DESC`,
+  },
+
   // ────── MySQL (5) ──────
   {
     id: 'my-group',
@@ -159,6 +210,54 @@ RIGHT JOIN table_b b ON a.id = b.a_id`,
   (SELECT COUNT(*) FROM employees e WHERE e.dept_id = d.id) AS headcount
 FROM departments d
 ORDER BY headcount DESC`,
+  },
+
+  {
+    id: 'my-window',
+    title: 'Window Functions',
+    dialect: 'mysql',
+    category: 'window',
+    description: 'ROW_NUMBER + RANK over partitioned sales data (MySQL 8+).',
+    sql: `SELECT
+  product_id,
+  sale_date,
+  amount,
+  ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY sale_date)        AS row_num,
+  RANK()       OVER (PARTITION BY product_id ORDER BY amount DESC)      AS amt_rank
+FROM sales
+ORDER BY product_id, sale_date`,
+  },
+  {
+    id: 'my-cte',
+    title: 'CTE — Daily Revenue (MySQL 8+)',
+    dialect: 'mysql',
+    category: 'cte',
+    description: 'Aggregates daily revenue in a CTE and selects the last 30 days.',
+    sql: `WITH daily AS (
+  SELECT
+    DATE(created_at)  AS day,
+    COUNT(*)          AS orders_count,
+    SUM(total)        AS revenue
+  FROM orders
+  WHERE status = 'completed'
+  GROUP BY DATE(created_at)
+)
+SELECT day, orders_count, revenue
+FROM daily
+ORDER BY day DESC
+LIMIT 30`,
+  },
+  {
+    id: 'my-update',
+    title: 'UPDATE with WHERE',
+    dialect: 'mysql',
+    category: 'basic',
+    description: 'Updates multiple columns for rows matching a condition.',
+    sql: `UPDATE orders
+SET status     = 'archived',
+    archived_at = NOW()
+WHERE status = 'completed'
+  AND created_at < DATE_SUB(NOW(), INTERVAL 1 YEAR)`,
   },
 
   // ────── SQL Server (5) ──────
@@ -261,6 +360,39 @@ HAVING SUM(total) > 10000
 SELECT *
 FROM #top_customers
 ORDER BY revenue DESC`,
+  },
+  {
+    id: 'ss-offset-fetch',
+    title: 'OFFSET / FETCH Pagination',
+    dialect: 'sqlserver',
+    category: 'basic',
+    description: 'Standard SQL Server pagination — page 3 of 10 rows.',
+    sql: `SELECT id, name, email, total_purchases
+FROM customers
+ORDER BY total_purchases DESC
+OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY`,
+  },
+  {
+    id: 'ss-update',
+    title: 'UPDATE with WHERE',
+    dialect: 'sqlserver',
+    category: 'basic',
+    description: 'Updates tier and timestamp for high-value customers.',
+    sql: `UPDATE customers
+SET tier       = 'gold',
+    updated_at  = GETDATE()
+WHERE total_spent  > 5000
+  AND last_order_at IS NOT NULL`,
+  },
+  {
+    id: 'ss-delete',
+    title: 'DELETE with Subquery',
+    dialect: 'sqlserver',
+    category: 'basic',
+    description: 'Deletes expired sessions older than the threshold.',
+    sql: `DELETE FROM session_logs
+WHERE session_start < GETDATE()
+  AND is_expired = 1`,
   },
 ]
 

@@ -26,7 +26,7 @@ describe('astToGraph — SELECT básico', () => {
     const { nodes } = astToGraph(ast, 'postgresql')
     const filterNode = nodes.find(n => n.data.nodeType === 'filter')
     expect(filterNode).toBeDefined()
-    expect(filterNode?.data.label).toBe('WHERE')
+    expect(filterNode?.data.label).toMatch(/^WHERE /)
   })
 
   it('creates a join node for INNER JOIN', () => {
@@ -41,7 +41,7 @@ describe('astToGraph — SELECT básico', () => {
     const { nodes } = astToGraph(ast, 'postgresql')
     const aggNode = nodes.find(n => n.data.nodeType === 'aggregate')
     expect(aggNode).toBeDefined()
-    expect(aggNode?.data.label).toBe('GROUP BY')
+    expect(aggNode?.data.label).toMatch(/^GROUP BY /)
   })
 
   it('creates a sort node for ORDER BY', () => {
@@ -49,7 +49,7 @@ describe('astToGraph — SELECT básico', () => {
     const { nodes } = astToGraph(ast, 'postgresql')
     const sortNode = nodes.find(n => n.data.nodeType === 'sort')
     expect(sortNode).toBeDefined()
-    expect(sortNode?.data.label).toBe('ORDER BY')
+    expect(sortNode?.data.label).toMatch(/^ORDER BY /)
   })
 
   it('creates a limit node for LIMIT', () => {
@@ -100,13 +100,15 @@ describe('astToGraph — CTEs', () => {
     expect(cteNode?.data.clause).toBe('WITH')
   })
 
-  it('cte node detail contains a preview of the inner SELECT', () => {
+  it('cte node detail contains the cte name and inner pipeline is expanded', () => {
     const ast = parse(`WITH recent AS (SELECT id, total FROM orders) SELECT * FROM recent`)
     const { nodes } = astToGraph(ast, 'postgresql')
     const cteNode = nodes.find(n => n.data.nodeType === 'cte')
     expect(cteNode).toBeDefined()
-    // detail should mention the source table of the inner SELECT
-    expect(cteNode?.data.detail).toContain('orders')
+    expect(cteNode?.data.detail).toContain('recent')
+    // Inner pipeline should include a table node for `orders`
+    const ordersTable = nodes.find(n => n.data.nodeType === 'table' && n.data.label === 'orders')
+    expect(ordersTable).toBeDefined()
   })
 
   it('creates edge from cte to the table node that references it by name', () => {
@@ -126,18 +128,19 @@ describe('astToGraph — CTEs', () => {
     expect(cteNodes.length).toBe(2)
   })
 
-  it('creates a cte-chain edge when CTE B references CTE A', () => {
+  it('when CTE B references CTE A, cteA connects into cteB pipeline', () => {
     const ast = parse(`WITH a AS (SELECT id FROM orders), b AS (SELECT id FROM a) SELECT * FROM b`)
     const { nodes, edges } = astToGraph(ast, 'postgresql')
-    const cteA = nodes.find(n => n.data.nodeType === 'cte' && n.data.label.includes('a'))
-    const cteB = nodes.find(n => n.data.nodeType === 'cte' && n.data.label.includes('b'))
+    const cteA = nodes.find(n => n.data.nodeType === 'cte' && n.data.label === 'CTE: a')
+    const cteB = nodes.find(n => n.data.nodeType === 'cte' && n.data.label === 'CTE: b')
     expect(cteA).toBeDefined()
     expect(cteB).toBeDefined()
-    // Edge from CTE A to CTE B (chain)
-    const chainEdge = edges.find(e => e.source === cteA!.id && e.target === cteB!.id)
-    expect(chainEdge).toBeDefined()
-    // Chain edge uses CTE style (purple dashed)
-    expect((chainEdge?.style as Record<string, unknown>)?.stroke).toBe('#8B7CF8')
+    // CTE A's output feeds into CTE B's pipeline (via an intermediary output node)
+    const edgeFromA = edges.find(e => e.source === cteA!.id)
+    expect(edgeFromA).toBeDefined()
+    // Something connects into CTE B
+    const edgeToCteB = edges.find(e => e.target === cteB!.id)
+    expect(edgeToCteB).toBeDefined()
   })
 })
 
@@ -194,6 +197,166 @@ describe('astToGraph — subquery in FROM', () => {
     expect(subNode).toBeDefined()
     expect(outNode).toBeDefined()
     // Edge from subquery to output (directly or via pipeline)
+    const nodeIds = new Set(nodes.map(n => n.id))
+    for (const edge of edges) {
+      expect(nodeIds.has(edge.source)).toBe(true)
+      expect(nodeIds.has(edge.target)).toBe(true)
+    }
+  })
+})
+
+describe('astToGraph — WHERE with function calls', () => {
+  it('displays YEAR(col) = N instead of raw JSON in WHERE label', () => {
+    // YEAR() is a SQL Server / MySQL function — parsed as {type:"function"}
+    const ast = parse(`SELECT id FROM sales WHERE YEAR(sale_date) = 2024`)
+    const { nodes } = astToGraph(ast, 'sqlserver')
+    const filterNode = nodes.find(n => n.data.nodeType === 'filter')
+    expect(filterNode).toBeDefined()
+    expect(filterNode?.data.label).not.toMatch(/\{.*type.*function/i)
+    expect(filterNode?.data.label).toMatch(/YEAR/i)
+    expect(filterNode?.data.label).toMatch(/2024/)
+  })
+
+  it('displays COUNT(*) in HAVING label', () => {
+    const ast = parse(`SELECT status, COUNT(*) FROM orders GROUP BY status HAVING COUNT(*) > 5`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const havingNode = nodes.find(n => n.data.label?.startsWith('HAVING'))
+    expect(havingNode).toBeDefined()
+    expect(havingNode?.data.label).toMatch(/COUNT/)
+    expect(havingNode?.data.label).not.toMatch(/\{.*type/i)
+  })
+
+  it('displays column.table reference correctly', () => {
+    const ast = parse(`SELECT * FROM orders o JOIN users u ON o.user_id = u.id WHERE o.total > 100`)
+    const { nodes } = astToGraph(ast, 'postgresql')
+    const filterNode = nodes.find(n => n.data.nodeType === 'filter')
+    expect(filterNode?.data.label).toMatch(/o\.total/)
+    expect(filterNode?.data.label).not.toMatch(/\{/)
+  })
+})
+
+describe('astToGraph — DML: UPDATE', () => {
+  it('creates table + output nodes for a simple UPDATE', () => {
+    const ast = parse(`UPDATE users SET status = 'inactive' WHERE id = 1`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const tableNode = nodes.find(n => n.data.nodeType === 'table')
+    const outNode = nodes.find(n => n.data.nodeType === 'output')
+    expect(tableNode).toBeDefined()
+    expect(tableNode?.data.label).toBe('users')
+    expect(outNode).toBeDefined()
+    expect(outNode?.data.label).toMatch(/SET/)
+  })
+
+  it('creates a filter node when UPDATE has WHERE', () => {
+    const ast = parse(`UPDATE orders SET status = 'done' WHERE total > 100`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const filterNode = nodes.find(n => n.data.nodeType === 'filter')
+    expect(filterNode).toBeDefined()
+    expect(filterNode?.data.label).toMatch(/WHERE/)
+  })
+
+  it('does NOT create filter node when UPDATE has no WHERE', () => {
+    const ast = parse(`UPDATE products SET active = 1`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const filterNode = nodes.find(n => n.data.nodeType === 'filter')
+    expect(filterNode).toBeUndefined()
+  })
+
+  it('edges connect table → filter → output', () => {
+    const ast = parse(`UPDATE users SET name = 'test' WHERE id = 5`)
+    const { nodes, edges } = astToGraph(ast, 'mysql')
+    const nodeIds = new Set(nodes.map(n => n.id))
+    for (const edge of edges) {
+      expect(nodeIds.has(edge.source)).toBe(true)
+      expect(nodeIds.has(edge.target)).toBe(true)
+    }
+  })
+
+  it('glossary contains UPDATE keyword', () => {
+    const ast = parse(`UPDATE users SET status = 'ok'`)
+    const { glossary } = astToGraph(ast, 'mysql')
+    expect(glossary.some(g => g.keyword === 'UPDATE')).toBe(true)
+  })
+})
+
+describe('astToGraph — DML: DELETE', () => {
+  it('creates table + output nodes for a simple DELETE', () => {
+    const ast = parse(`DELETE FROM old_logs WHERE created_at < '2023-01-01'`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const tableNode = nodes.find(n => n.data.nodeType === 'table')
+    const outNode = nodes.find(n => n.data.nodeType === 'output')
+    expect(tableNode).toBeDefined()
+    expect(tableNode?.data.label).toBe('old_logs')
+    expect(outNode?.data.label).toBe('DELETE')
+  })
+
+  it('creates filter node when DELETE has WHERE', () => {
+    const ast = parse(`DELETE FROM sessions WHERE expired = 1`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const filterNode = nodes.find(n => n.data.nodeType === 'filter')
+    expect(filterNode).toBeDefined()
+  })
+
+  it('edges are valid for DELETE graph', () => {
+    const ast = parse(`DELETE FROM orders WHERE status = 'cancelled'`)
+    const { nodes, edges } = astToGraph(ast, 'mysql')
+    const nodeIds = new Set(nodes.map(n => n.id))
+    for (const edge of edges) {
+      expect(nodeIds.has(edge.source)).toBe(true)
+      expect(nodeIds.has(edge.target)).toBe(true)
+    }
+  })
+
+  it('glossary contains DELETE keyword', () => {
+    const ast = parse(`DELETE FROM orders WHERE id = 1`)
+    const { glossary } = astToGraph(ast, 'mysql')
+    expect(glossary.some(g => g.keyword === 'DELETE')).toBe(true)
+  })
+})
+
+describe('astToGraph — DML: INSERT VALUES', () => {
+  it('creates VALUES + table nodes for INSERT INTO ... VALUES', () => {
+    const ast = parse(`INSERT INTO users (name, email) VALUES ('Ana', 'ana@test.com')`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const valNode = nodes.find(n => n.data.nodeType === 'output' && n.data.label === 'VALUES')
+    const tableNode = nodes.find(n => n.data.nodeType === 'table')
+    expect(valNode).toBeDefined()
+    expect(tableNode).toBeDefined()
+    expect(tableNode?.data.label).toBe('users')
+  })
+
+  it('edge connects VALUES → table node', () => {
+    const ast = parse(`INSERT INTO products (name, price) VALUES ('Widget', 9.99)`)
+    const { nodes, edges } = astToGraph(ast, 'mysql')
+    const nodeIds = new Set(nodes.map(n => n.id))
+    for (const edge of edges) {
+      expect(nodeIds.has(edge.source)).toBe(true)
+      expect(nodeIds.has(edge.target)).toBe(true)
+    }
+    expect(edges.length).toBeGreaterThan(0)
+  })
+
+  it('glossary contains INSERT keyword', () => {
+    const ast = parse(`INSERT INTO t (a) VALUES (1)`)
+    const { glossary } = astToGraph(ast, 'mysql')
+    expect(glossary.some(g => g.keyword === 'INSERT')).toBe(true)
+  })
+})
+
+describe('astToGraph — DML: INSERT SELECT', () => {
+  it('expands the SELECT sub-graph and inserts into target table', () => {
+    const ast = parse(`INSERT INTO archive SELECT id, name FROM users WHERE active = 0`)
+    const { nodes } = astToGraph(ast, 'mysql')
+    const tableNodes = nodes.filter(n => n.data.nodeType === 'table')
+    // At least one table from the SELECT (users) + target table (archive)
+    expect(tableNodes.length).toBeGreaterThanOrEqual(2)
+    const archive = tableNodes.find(n => n.data.label === 'archive')
+    expect(archive).toBeDefined()
+  })
+
+  it('edges are valid for INSERT SELECT graph', () => {
+    const ast = parse(`INSERT INTO archive SELECT id FROM users WHERE id > 0`)
+    const { nodes, edges } = astToGraph(ast, 'mysql')
     const nodeIds = new Set(nodes.map(n => n.id))
     for (const edge of edges) {
       expect(nodeIds.has(edge.source)).toBe(true)

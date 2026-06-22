@@ -9,9 +9,9 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   test: {
-    environment: 'node',
     globals: true,
-    include: ['src/__tests__/**/*.test.ts'],
+    setupFiles: ['./src/setupTests.ts'],
+    include: ['src/__tests__/**/*.{test,spec}.{ts,tsx}'],
     coverage: { provider: 'v8', reporter: ['text', 'lcov'] },
   },
 })

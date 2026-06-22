@@ -10,7 +10,7 @@ export function useExport() {
     try {
       const dataUrl = await toPng(el, { cacheBust: true, backgroundColor: 'var(--bg-primary)' })
       const link = document.createElement('a')
-      link.download = `vali-viewsql-${Date.now()}.png`
+      link.download = `vali-view-sql-${Date.now()}.png`
       link.href = dataUrl
       link.click()
     } catch (err) {
@@ -24,7 +24,7 @@ export function useExport() {
     try {
       const dataUrl = await toSvg(el, { cacheBust: true })
       const link = document.createElement('a')
-      link.download = `vali-viewsql-${Date.now()}.svg`
+      link.download = `vali-view-sql-${Date.now()}.svg`
       link.href = dataUrl
       link.click()
     } catch (err) {

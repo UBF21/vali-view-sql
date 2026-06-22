@@ -1,12 +1,18 @@
+import { Database, RefreshCw, LayoutGrid, Zap } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import type { Suggestion } from '@/types'
 
 const IMPACT_COLOR = { high: '#E24B4A', medium: '#EF9F27', low: '#1D9E75' }
-const CATEGORY_ICON = { index: '⊡', rewrite: '↺', dialect: '⊞', performance: '⚡' }
+const CATEGORY_ICON: Record<string, React.ReactNode> = {
+  index: <Database size={12} />,
+  rewrite: <RefreshCw size={12} />,
+  dialect: <LayoutGrid size={12} />,
+  performance: <Zap size={12} />,
+}
 
 function SuggestionCard({ suggestion }: { suggestion: Suggestion }) {
   const impactColor = IMPACT_COLOR[suggestion.impact]
-  const catIcon = CATEGORY_ICON[suggestion.category] ?? '•'
+  const catIcon = CATEGORY_ICON[suggestion.category] ?? <span>•</span>
 
   return (
     <div style={{

@@ -1,32 +1,33 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { NODE_COLORS, getDiffBorder } from './index'
+import { BaseNodeCard } from './BaseNode'
+import { NODE_COLORS, NODE_BG, getDiffBorder } from './node-utils'
 import type { SQLNodeData } from '@/types'
 
 export const SubqueryNode = memo(function SubqueryNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
-  const colors = NODE_COLORS.subquery
+  const c = NODE_COLORS.subquery
   return (
-    <div style={{
-      background: colors.bg,
-      border: `1.5px solid ${getDiffBorder(data, colors.border)}`,
-      borderRadius: 8,
-      padding: '10px 14px',
-      minWidth: 200, maxWidth: 280,
-      opacity: data.isActive === false ? 0.3 : 1,
-      transition: 'opacity 0.3s',
-      outline: selected ? `2px solid ${colors.border}` : 'none', outlineOffset: 2,
-    }}>
+    <div>
       <Handle type="source" position={Position.Bottom} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-        <span style={{ fontSize: 12 }}>{colors.icon}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: colors.text, fontFamily: 'monospace' }}>{data.label}</span>
-      </div>
-      <p style={{ fontSize: 11, color: colors.text, margin: 0, lineHeight: 1.4, opacity: 0.75 }}>{data.detail}</p>
-      {data.subGraph && (
-        <div style={{ marginTop: 6, fontSize: 10, color: colors.text, opacity: 0.6, fontStyle: 'italic' }}>
-          Click to expand
-        </div>
-      )}
+      <BaseNodeCard
+        nodeType="subquery"
+        label={data.label}
+        detail={data.detail}
+        clause={data.clause}
+        accentColor={getDiffBorder(data, c.border)}
+        textColor={c.text}
+        bgColor={NODE_BG.subquery}
+        borderColor={c.border}
+        isActive={data.isActive}
+        selected={selected}
+        diffStatus={data.diffStatus}
+      >
+        {data.subGraph && (
+          <div style={{ padding: '0 10px 8px 10px', fontSize: 10, color: c.text, opacity: 0.6, fontStyle: 'italic' }}>
+            Click to expand
+          </div>
+        )}
+      </BaseNodeCard>
     </div>
   )
 })

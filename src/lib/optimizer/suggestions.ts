@@ -95,9 +95,10 @@ export function generateSuggestions(
   }
 
   // Index suggestions — look for columns in WHERE with no apparent index
+  const COMMON_PKS = new Set(['id', 'uuid', 'pk', '_id', 'guid'])
   if (ast?.where && ast?.from) {
     const whereCol = ast.where?.left?.column ?? ast.where?.column
-    if (whereCol && typeof whereCol === 'string') {
+    if (whereCol && typeof whereCol === 'string' && !COMMON_PKS.has(whereCol.toLowerCase())) {
       suggestions.push(makeSuggestion(
         'index',
         `Consider an index on ${whereCol}`,

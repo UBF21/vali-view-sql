@@ -1,10 +1,7 @@
-import { useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import {
   ReactFlow,
-  Background,
-  BackgroundVariant,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   type Node,
@@ -14,6 +11,8 @@ import {
 import '@xyflow/react/dist/style.css'
 import { motion, AnimatePresence } from 'framer-motion'
 import { customNodeTypes } from './nodes'
+import { NodeInfoPanel } from './NodeInfoPanel'
+import { useAppStore } from '@/store/useAppStore'
 import type { SQLNodeData } from '@/types'
 
 interface DiagramCanvasProps {
@@ -25,12 +24,21 @@ interface DiagramCanvasProps {
 }
 
 export function DiagramCanvas({ nodes: initialNodes, edges: initialEdges, isLoading, className }: DiagramCanvasProps) {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes)
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges)
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  const setInfoNode = useAppStore((s) => s.setInfoNode)
 
-  const onNodeClick: NodeMouseHandler = useCallback((_event, node) => {
-    console.debug('[DiagramCanvas] node clicked:', node.id)
-  }, [])
+  useEffect(() => { setNodes(initialNodes) }, [initialNodes, setNodes])
+  useEffect(() => { setEdges(initialEdges) }, [initialEdges, setEdges])
+
+  const handleNodeClick = useCallback<NodeMouseHandler<Node<SQLNodeData>>>((_evt, node) => {
+    setInfoNode({
+      nodeType: node.data.nodeType,
+      label: node.data.label,
+      detail: node.data.detail ?? '',
+      clause: node.data.clause,
+    })
+  }, [setInfoNode])
 
   return (
     <div className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -64,34 +72,37 @@ export function DiagramCanvas({ nodes: initialNodes, edges: initialEdges, isLoad
         nodeTypes={customNodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeClick={onNodeClick}
+        onNodeClick={handleNodeClick}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.3}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
-        style={{ background: 'var(--bg-primary)' }}
+        style={{
+          background: 'var(--void)',
+          backgroundImage: [
+            'radial-gradient(ellipse at 50% 40%, rgba(200,136,10,.04) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 80% 80%, rgba(139,124,248,.04) 0%, transparent 50%)',
+            'radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px)',
+          ].join(', '),
+          backgroundSize: 'cover, cover, 22px 22px',
+        }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border)" />
-        <Controls
-          style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-          }}
-        />
-        <MiniMap
-          nodeColor={(node) => {
-            const data = node.data as SQLNodeData
-            return data?.nodeType ? '#5DCAA5' : '#888'
-          }}
-          style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-          }}
-        />
+        <Controls />
       </ReactFlow>
+      {/* Radial vignette — dark mode only via CSS token */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 1,
+          background: 'radial-gradient(ellipse at center, transparent 40%, var(--canvas-vignette) 100%)',
+        }}
+      />
+
+      {/* Node info panel — slides in from right */}
+      <NodeInfoPanel />
     </div>
   )
 }

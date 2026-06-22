@@ -1,11 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Dialect, AppMode, ParseResult, Issue, Suggestion } from '@/types'
+import type { Dialect, AppMode, ParseResult, Issue, Suggestion, NodeType } from '@/types'
 
 interface HistoryEntry {
   query: string
   dialect: Dialect
   timestamp: number
+}
+
+export interface InfoNodeData {
+  nodeType: NodeType
+  label: string
+  detail: string
+  clause?: string
 }
 
 interface AppStore {
@@ -20,6 +27,7 @@ interface AppStore {
   isLoading: boolean
   parseError: string | null
   history: HistoryEntry[]
+  infoNode: InfoNodeData | null
 
   setDialect: (d: Dialect) => void
   setQuery: (q: string) => void
@@ -33,6 +41,7 @@ interface AppStore {
   setParseError: (e: string | null) => void
   addToHistory: (query: string, dialect: Dialect) => void
   clearHistory: () => void
+  setInfoNode: (n: InfoNodeData | null) => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -49,6 +58,7 @@ export const useAppStore = create<AppStore>()(
       isLoading: false,
       parseError: null,
       history: [],
+      infoNode: null,
 
       setDialect: (dialect) => set({ dialect }),
       setQuery: (query) => set({ query }),
@@ -68,6 +78,7 @@ export const useAppStore = create<AppStore>()(
           ],
         })),
       clearHistory: () => set({ history: [] }),
+      setInfoNode: (infoNode) => set({ infoNode }),
     }),
     {
       name: 'vali-viewsql-store',

@@ -194,6 +194,14 @@ function makeFlowEdge(source: string, target: string, id: string): Edge {
   }
 }
 
+function hashStr(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0
+  }
+  return Math.abs(h)
+}
+
 // Entry point principal
 export function parseSP(
   sql: string,
@@ -203,8 +211,8 @@ export function parseSP(
   const params = extractParams(sql)
   const body = extractBody(sql)
 
-  // Nodo procedure container
-  const procId = 'procedure-0'
+  // Nodo procedure container — ID único por SP usando hash del nombre o del SQL
+  const procId = `procedure-${hashStr(procedureName !== 'procedure' ? procedureName : sql.slice(0, 50))}`
   const procNode: Node<SQLNodeData> = {
     id: procId,
     type: 'procedureNode',

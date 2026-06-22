@@ -7,14 +7,23 @@ interface GraphResult {
   glossary: GlossaryEntry[]
 }
 
-let _counter = 0
-
-function nextId(type: string): string {
-  return `${type}-${_counter++}`
+function createIdGen() {
+  let c = 0
+  return (type: string) => `${type}-${c++}`
 }
 
 export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
-  _counter = 0
+  const nextId = createIdGen()
+  return astToGraphInner(ast, _dialect, nextId, new Map(), new Set())
+}
+
+function astToGraphInner(
+  ast: unknown,
+  _dialect: Dialect,
+  nextId: (type: string) => string,
+  parentCteMap: Map<string, string>,
+  parentCteNames: Set<string>,
+): GraphResult {
   const nodes: Node<SQLNodeData>[] = []
   const edges: Edge[] = []
   const glossary: GlossaryEntry[] = []
@@ -24,56 +33,34 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
     ? (ast[0] as Record<string, unknown>)
     : (ast as Record<string, unknown>)
 
-  if (!stmt || stmt.type !== 'select') {
-    return { nodes, edges, glossary }
-  }
+  if (!stmt) return { nodes, edges, glossary }
+  if (stmt.type === 'update') return buildUpdateGraph(stmt, nextId)
+  if (stmt.type === 'delete') return buildDeleteGraph(stmt, nextId)
+  if (stmt.type === 'insert') return buildInsertGraph(stmt, _dialect, nextId)
+  if (stmt.type !== 'select') return { nodes, edges, glossary }
 
   // ── SET OPERATIONS (UNION / INTERSECT / EXCEPT) ───────────────────────────
-  // node-sql-parser v4: UNION is represented as stmt._next + stmt.set_op
-  // The first SELECT is in stmt, the second is in stmt._next
   if (stmt._next && stmt.set_op) {
     const setOp = (stmt.set_op as string).toUpperCase()
     const setopId = nextId('setop')
 
-    // Process left branch (stmt itself, without _next)
     const leftStmt = { ...stmt, _next: undefined, set_op: undefined } as Record<string, unknown>
-    const leftResult = astToGraph(leftStmt, _dialect)
-    // Re-index IDs to avoid collisions
-    const leftOffset = _counter
-    void leftOffset // used implicitly via _counter state after recursive call
-
-    // Process right branch (stmt._next)
     const rightStmt = stmt._next as Record<string, unknown>
-    const rightResult = astToGraph(rightStmt, _dialect)
+    const leftResult = astToGraphInner(leftStmt, _dialect, nextId, parentCteMap, parentCteNames)
+    const rightResult = astToGraphInner(rightStmt, _dialect, nextId, parentCteMap, parentCteNames)
 
-    // Collect all nodes from both branches
-    for (const n of leftResult.nodes) {
-      nodes.push(n)
-    }
-    for (const n of rightResult.nodes) {
-      nodes.push(n)
-    }
-    for (const e of leftResult.edges) {
-      edges.push(e)
-    }
-    for (const e of rightResult.edges) {
-      edges.push(e)
-    }
+    for (const n of leftResult.nodes) nodes.push(n)
+    for (const n of rightResult.nodes) nodes.push(n)
+    for (const e of leftResult.edges) edges.push(e)
+    for (const e of rightResult.edges) edges.push(e)
 
-    // Create the SETOP node
     nodes.push({
       id: setopId,
       type: 'setopNode',
       position: { x: 0, y: 0 },
-      data: {
-        nodeType: 'setop',
-        label: setOp,
-        detail: `Combines results with ${setOp}`,
-        clause: 'UNION',
-      },
+      data: { nodeType: 'setop', label: setOp, detail: `Combines results with ${setOp}`, clause: 'UNION' },
     })
 
-    // Connect the last output node from each branch to the setop node
     const leftOutput = leftResult.nodes.find(n => n.data.nodeType === 'output')
     const rightOutput = rightResult.nodes.find(n => n.data.nodeType === 'output')
     const leftLast = leftOutput ?? leftResult.nodes[leftResult.nodes.length - 1]
@@ -84,11 +71,7 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
 
     for (const g of leftResult.glossary) glossary.push(g)
     for (const g of rightResult.glossary) glossary.push(g)
-    glossary.push({
-      keyword: setOp,
-      role: 'Set Operation',
-      detail: 'Combines rows from two queries',
-    })
+    glossary.push({ keyword: setOp, role: 'Set Operation', detail: 'Combines rows from two queries' })
 
     return { nodes, edges, glossary }
   }
@@ -96,87 +79,124 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
   let lastNodeId: string | null = null
   const sourceNodeIds: string[] = []
 
-  // ── CTEs (WITH clause) ────────────────────────────────────────────────────
-  // node-sql-parser v4: ast.with = [{ name: { value: string }, stmt: { ast: ... } }]
+  // Inherit CTEs from parent scope (enables cross-CTE references in nested calls)
+  const cteNames = new Set<string>(parentCteNames)
+  const cteNodeMap = new Map<string, string>(parentCteMap)
+
+  // ── CTEs (WITH clause) — TWO-PASS ─────────────────────────────────────────
+  // Pass 1: register all CTE names first so forward/cross-CTE references work
+  // Pass 2: expand each CTE body recursively
   const withClauses = stmt.with as Array<Record<string, unknown>> | null
-  const cteNames = new Set<string>()
-  const cteNodeMap = new Map<string, string>() // cteName → nodeId
 
   if (Array.isArray(withClauses) && withClauses.length > 0) {
-    for (const cteEntry of withClauses) {
-      const nameObj = cteEntry.name as Record<string, unknown>
-      const cteName = (nameObj?.value as string) ?? 'cte'
-      const cteStmtWrapper = cteEntry.stmt as Record<string, unknown>
-      const cteAst = cteStmtWrapper?.ast as Record<string, unknown> | undefined
+    // ── Pass 1: create CTE nodes and register names ──────────────────────────
+    type CteEntry = { cteName: string; cteId: string; cteAst: Record<string, unknown> | undefined }
+    const cteQueue: CteEntry[] = []
 
-      // Build a preview from the CTE inner SELECT (show FROM table name)
-      const cteFromList = cteAst?.from as Array<Record<string, unknown>> | null
-      const cteFromTable = Array.isArray(cteFromList) ? (cteFromList[0]?.table as string) : undefined
-      const cteDetail = cteFromTable ? `SELECT from ${cteFromTable}` : 'Inline subquery'
+    for (const cteEntry of withClauses) {
+      // node-sql-parser stores CTE name as { value: string } or as a plain string
+      const rawName = cteEntry.name
+      const cteName: string =
+        typeof rawName === 'string'
+          ? rawName
+          : ((rawName as Record<string, unknown>)?.value as string | undefined) ?? 'cte'
+
+      // CTE body may be wrapped in { ast: ... } or be the AST directly
+      const cteStmtWrapper = cteEntry.stmt as Record<string, unknown>
+      const cteAst = (
+        cteStmtWrapper?.type === 'select'
+          ? cteStmtWrapper
+          : (cteStmtWrapper?.ast as Record<string, unknown> | undefined)
+      )
 
       const cteId = nextId('cte')
       nodes.push({
         id: cteId,
         type: 'cteNode',
         position: { x: 0, y: 0 },
-        data: {
-          nodeType: 'cte',
-          label: `CTE: ${cteName}`,
-          detail: cteDetail,
-          clause: 'WITH',
-        },
+        data: { nodeType: 'cte', label: `CTE: ${cteName}`, detail: `Creates a temporary result set named ${cteName}.`, clause: 'WITH' },
       })
+
       cteNames.add(cteName)
       cteNodeMap.set(cteName, cteId)
+      cteQueue.push({ cteName, cteId, cteAst })
 
-      // Check if this CTE body references another CTE (chain detection)
-      // The CTE body's tableList contains referenced tables
-      const cteTableList = (cteEntry.stmt as Record<string, unknown>)?.tableList as string[] | undefined
-      if (Array.isArray(cteTableList)) {
-        for (const tableRef of cteTableList) {
-          // tableList format: "select::null::tableName"
-          const referencedTable = tableRef.split('::')[2]
-          if (referencedTable && cteNodeMap.has(referencedTable)) {
-            const parentCteId = cteNodeMap.get(referencedTable)!
-            edges.push(makeCteEdge(parentCteId, cteId, `cte-chain-${parentCteId}-${cteId}`))
-          }
-        }
+      glossary.push({ keyword: 'WITH', role: 'CTE', detail: `Defines reusable subquery "${cteName}"` })
+    }
+
+    // ── Pass 2: expand CTE bodies ────────────────────────────────────────────
+    for (const { cteId, cteAst } of cteQueue) {
+      if (!cteAst) continue
+
+      // Process only the base (non-recursive) SELECT — strip _next/set_op
+      const baseAst: Record<string, unknown> = { ...cteAst, _next: undefined, set_op: undefined }
+      // Mark as select if the node type is missing (some parser versions omit it)
+      if (!baseAst.type) baseAst.type = 'select'
+
+      // Inner call inherits the full cteNodeMap so cross-CTE refs resolve correctly
+      const inner = astToGraphInner(baseAst, _dialect, nextId, cteNodeMap, cteNames)
+
+      for (const n of inner.nodes) nodes.push(n)
+      for (const e of inner.edges) edges.push(e)
+      for (const g of inner.glossary) glossary.push(g)
+
+      // Connect the last pipeline node → CTE node
+      const lastInner = inner.nodes[inner.nodes.length - 1]
+      if (lastInner) {
+        edges.push(makeDataEdge(lastInner.id, cteId))
       }
 
-      // Check for self-reference (recursive CTE)
-      const bodyFromList = cteAst?.from as Array<Record<string, unknown>> | null
-      if (Array.isArray(bodyFromList)) {
-        const selfRef = bodyFromList.find(f => (f.table as string) === cteName)
-        if (selfRef) {
-          edges.push({
-            id: `cte-loop-${cteId}`,
-            source: cteId,
-            target: cteId,
-            animated: false,
-            style: { stroke: '#8B7CF8', strokeWidth: 1.5, strokeDasharray: '6,4' },
+      // Handle WITH RECURSIVE: add self-reference loop edge + expand recursive member tables
+      if (cteAst._next) {
+        const recursiveAst = cteAst._next as Record<string, unknown>
+
+        // Visual loop edge for the recursive step
+        edges.push({
+          id: `cte-loop-${cteId}`,
+          source: cteId,
+          target: cteId,
+          animated: false,
+          style: { stroke: '#8B7CF8', strokeWidth: 1.5, strokeDasharray: '6,4' },
+        })
+
+        // Create TABLE nodes for non-CTE tables in the recursive member
+        const recursiveFrom = (recursiveAst.from as Array<Record<string, unknown>> | null) ?? []
+        const seenRecursive = new Set<string>()
+        for (const fromItem of recursiveFrom) {
+          const refTable = fromItem.table as string | undefined
+          if (!refTable || cteNames.has(refTable) || seenRecursive.has(refTable)) continue
+          seenRecursive.add(refTable)
+          const tId = nextId('table')
+          nodes.push({
+            id: tId,
+            type: 'tableNode',
+            position: { x: 0, y: 0 },
+            data: {
+              nodeType: 'table',
+              label: refTable,
+              detail: `Loads base data from ${refTable}.`,
+              clause: `FROM ${refTable}`,
+            },
           })
+          edges.push(makeDataEdge(tId, cteId))
         }
       }
     }
   }
 
   // ── FROM + JOINs ─────────────────────────────────────────────────────────
-  // node-sql-parser v4: joins are embedded in the `from` array as items
-  // with a `join` property. The first item (no `join` key) is the main table.
   const fromList = stmt.from as Array<Record<string, unknown>> | null
 
   if (Array.isArray(fromList)) {
     for (const fromItem of fromList) {
       // ── Subquery in FROM ─────────────────────────────────────────────────
-      // Subqueries have `expr.ast` instead of `table`
       if (!fromItem.table && fromItem.expr) {
         const exprObj = fromItem.expr as Record<string, unknown>
         const subAst = exprObj.ast as Record<string, unknown> | undefined
         const alias = fromItem.as as string | null
         const subId = nextId('subquery')
-        // Build subGraph for future expansion (no recursion here — placeholder)
         const subGraph = subAst
-          ? astToGraph(subAst, _dialect)
+          ? astToGraphInner(subAst, _dialect, nextId, cteNodeMap, cteNames)
           : { nodes: [], edges: [] }
         nodes.push({
           id: subId,
@@ -192,11 +212,7 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
         })
         sourceNodeIds.push(subId)
         lastNodeId = subId
-        glossary.push({
-          keyword: 'FROM',
-          role: 'Source',
-          detail: 'Derived table from a subquery',
-        })
+        glossary.push({ keyword: 'FROM', role: 'Source', detail: 'Derived table from a subquery' })
         continue
       }
 
@@ -204,70 +220,88 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
       const alias = fromItem.as as string | null
 
       if (fromItem.join) {
-        // This is a JOIN item in the from array
+        // ── JOIN item ─────────────────────────────────────────────────────
         const joinType = fromItem.join as string
         const joinId = nextId('join')
+        const onCondition = stringifyCondition(fromItem.on)
+
+        // Reuse CTE node if this table is a CTE reference; otherwise create TABLE node
+        let joinedTableId: string
+        if (cteNodeMap.has(tableName)) {
+          joinedTableId = cteNodeMap.get(tableName)!
+        } else {
+          const joinedLabel = alias ? `${tableName} (${alias})` : tableName
+          joinedTableId = nextId('table')
+          nodes.push({
+            id: joinedTableId,
+            type: 'tableNode',
+            position: { x: 0, y: 0 },
+            data: {
+              nodeType: 'table',
+              label: joinedLabel,
+              detail: `Loads base data from the ${joinedLabel} table.`,
+              clause: `${joinType} ${tableName}${alias ? ` ${alias}` : ''}`,
+            },
+          })
+        }
+
         nodes.push({
           id: joinId,
           type: 'joinNode',
           position: { x: 0, y: 0 },
           data: {
             nodeType: 'join',
-            label: joinType,
-            detail: `Joins with "${tableName}"${alias ? ` AS ${alias}` : ''}`,
-            clause: `${joinType} ${tableName}${alias ? ` AS ${alias}` : ''} ON ${stringifyCondition(fromItem.on)}`,
+            label: `${joinType} ON ${onCondition}`,
+            detail: `${joinType}: matches where ${onCondition}.`,
+            clause: `${joinType} ${tableName} ON ${onCondition}`,
           },
         })
-        // Connect all previous source nodes to this join
+
+        // Left sources → left handle; joined table → right handle
         for (const srcId of sourceNodeIds) {
-          edges.push(makeJoinEdge(srcId, joinId))
+          edges.push(makeJoinEdge(srcId, joinId, 'left'))
         }
         if (lastNodeId && !sourceNodeIds.includes(lastNodeId)) {
-          edges.push(makeJoinEdge(lastNodeId, joinId))
+          edges.push(makeJoinEdge(lastNodeId, joinId, 'left'))
         }
+        edges.push(makeJoinEdge(joinedTableId, joinId, 'right'))
         sourceNodeIds.push(joinId)
         lastNodeId = joinId
         glossary.push({
           keyword: joinType.split(' ')[0],
           role: 'Join',
-          detail: `Combines rows based on a matching column`,
+          detail: 'Combines rows based on a matching column',
         })
       } else {
-        // Check if this table reference is a CTE → create edge from CTE node
+        // ── Regular FROM item ─────────────────────────────────────────────
         if (cteNodeMap.has(tableName)) {
+          // CTE reference — use the existing CTE node as source
           const cteId = cteNodeMap.get(tableName)!
-          // The CTE node IS the source — use it directly as a source
           sourceNodeIds.push(cteId)
           lastNodeId = cteId
-          // Don't create a separate table node for CTE references in FROM
           continue
         }
 
-        // Determine node type: temp_table vs regular table
         const isTemp = tableName.startsWith('tmp_')
         const nodeType = isTemp ? 'temp_table' : 'table'
         const reactNodeType = isTemp ? 'tempTableNode' : 'tableNode'
 
-        // Main table source
         const tableId = nextId('table')
+        const mainLabel = alias ? `${tableName} (${alias})` : tableName
         nodes.push({
           id: tableId,
           type: reactNodeType,
           position: { x: 0, y: 0 },
           data: {
             nodeType,
-            label: tableName,
-            detail: alias ? `Alias: ${alias}` : isTemp ? 'Temporary table' : 'Source table',
+            label: mainLabel,
+            detail: isTemp ? 'Temporary table' : `Loads base data from the ${mainLabel} table.`,
             clause: `FROM ${tableName}${alias ? ` AS ${alias}` : ''}`,
           },
         })
         sourceNodeIds.push(tableId)
         lastNodeId = tableId
-        glossary.push({
-          keyword: 'FROM',
-          role: 'Source',
-          detail: `Specifies "${tableName}" as the source table`,
-        })
+        glossary.push({ keyword: 'FROM', role: 'Source', detail: `Specifies "${tableName}" as the source table` })
       }
     }
   }
@@ -275,33 +309,27 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
   // ── WHERE ─────────────────────────────────────────────────────────────────
   if (stmt.where && lastNodeId) {
     const id = nextId('filter')
+    const whereCond = stringifyCondition(stmt.where)
     nodes.push({
       id,
       type: 'filterNode',
       position: { x: 0, y: 0 },
       data: {
         nodeType: 'filter',
-        label: 'WHERE',
-        detail: stringifyCondition(stmt.where),
-        clause: `WHERE ${stringifyCondition(stmt.where)}`,
+        label: `WHERE ${whereCond}`,
+        detail: `Keeps only rows where ${whereCond}.`,
+        clause: `WHERE ${whereCond}`,
       },
     })
     edges.push(makeFilterEdge(lastNodeId, id))
     lastNodeId = id
-    glossary.push({
-      keyword: 'WHERE',
-      role: 'Filter',
-      detail: 'Filters rows before aggregation',
-    })
+    glossary.push({ keyword: 'WHERE', role: 'Filter', detail: 'Filters rows before aggregation' })
   }
 
   // ── GROUP BY ──────────────────────────────────────────────────────────────
-  // node-sql-parser v4: groupby is Array<{ type: 'column_ref', column: string }>
   const groupby = stmt.groupby as Array<Record<string, unknown>> | null
   if (Array.isArray(groupby) && groupby.length > 0 && lastNodeId) {
-    const cols = groupby
-      .map(g => (g.column as string) ?? '?')
-      .join(', ')
+    const cols = groupby.map(g => (g.column as string) ?? '?').join(', ')
     const id = nextId('aggregate')
     nodes.push({
       id,
@@ -309,41 +337,34 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
       position: { x: 0, y: 0 },
       data: {
         nodeType: 'aggregate',
-        label: 'GROUP BY',
-        detail: `Groups by: ${cols}`,
+        label: `GROUP BY ${cols}`,
+        detail: `Groups rows together by ${cols}.`,
         clause: `GROUP BY ${cols}`,
       },
     })
     edges.push(makeDataEdge(lastNodeId, id))
     lastNodeId = id
-    glossary.push({
-      keyword: 'GROUP BY',
-      role: 'Aggregation',
-      detail: 'Groups rows by one or more columns',
-    })
+    glossary.push({ keyword: 'GROUP BY', role: 'Aggregation', detail: 'Groups rows by one or more columns' })
   }
 
   // ── HAVING ────────────────────────────────────────────────────────────────
   if (stmt.having && lastNodeId) {
     const id = nextId('filter')
+    const havingCond = stringifyCondition(stmt.having)
     nodes.push({
       id,
       type: 'filterNode',
       position: { x: 0, y: 0 },
       data: {
         nodeType: 'filter',
-        label: 'HAVING',
-        detail: stringifyCondition(stmt.having),
-        clause: `HAVING ${stringifyCondition(stmt.having)}`,
+        label: `HAVING ${havingCond}`,
+        detail: `Keeps only groups where ${havingCond}.`,
+        clause: `HAVING ${havingCond}`,
       },
     })
     edges.push(makeFilterEdge(lastNodeId, id))
     lastNodeId = id
-    glossary.push({
-      keyword: 'HAVING',
-      role: 'Filter',
-      detail: 'Filters groups after aggregation',
-    })
+    glossary.push({ keyword: 'HAVING', role: 'Filter', detail: 'Filters groups after aggregation' })
   }
 
   // ── SELECT output ─────────────────────────────────────────────────────────
@@ -363,30 +384,24 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
       colNames = ['*']
     }
     const id = nextId('output')
-    const preview =
-      colNames.slice(0, 4).join(', ') + (colNames.length > 4 ? '…' : '')
+    const preview = colNames.slice(0, 4).join(', ') + (colNames.length > 4 ? '…' : '')
     nodes.push({
       id,
       type: 'outputNode',
       position: { x: 0, y: 0 },
       data: {
         nodeType: 'output',
-        label: 'SELECT',
-        detail: `Returns: ${preview}`,
+        label: `SELECT ${preview}`,
+        detail: 'Selects and formats the output columns.',
         clause: `SELECT ${colNames.join(', ')}`,
       },
     })
     edges.push(makeDataEdge(lastNodeId, id))
     lastNodeId = id
-    glossary.push({
-      keyword: 'SELECT',
-      role: 'Projection',
-      detail: 'Specifies which columns to return',
-    })
+    glossary.push({ keyword: 'SELECT', role: 'Projection', detail: 'Specifies which columns to return' })
   }
 
   // ── ORDER BY ──────────────────────────────────────────────────────────────
-  // node-sql-parser v4: orderby is Array<{ expr: { type, column }, type: 'ASC'|'DESC' }>
   const orderby = stmt.orderby as Array<Record<string, unknown>> | null
   if (Array.isArray(orderby) && orderby.length > 0 && lastNodeId) {
     const cols = orderby
@@ -402,24 +417,14 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
       id,
       type: 'sortNode',
       position: { x: 0, y: 0 },
-      data: {
-        nodeType: 'sort',
-        label: 'ORDER BY',
-        detail: cols,
-        clause: `ORDER BY ${cols}`,
-      },
+      data: { nodeType: 'sort', label: `ORDER BY ${cols}`, detail: `Sorts the results by ${cols}.`, clause: `ORDER BY ${cols}` },
     })
     edges.push(makeDataEdge(lastNodeId, id))
     lastNodeId = id
-    glossary.push({
-      keyword: 'ORDER BY',
-      role: 'Sorting',
-      detail: 'Sorts the result set',
-    })
+    glossary.push({ keyword: 'ORDER BY', role: 'Sorting', detail: 'Sorts the result set' })
   }
 
   // ── LIMIT ─────────────────────────────────────────────────────────────────
-  // node-sql-parser v4: limit is { seperator: '', value: [{ type: 'number', value: N }] }
   if (stmt.limit && lastNodeId) {
     const limitRaw = stmt.limit as Record<string, unknown>
     const valArr = limitRaw.value as Array<Record<string, unknown>> | undefined
@@ -437,14 +442,116 @@ export function astToGraph(ast: unknown, _dialect: Dialect): GraphResult {
       },
     })
     edges.push(makeDataEdge(lastNodeId, id))
-    glossary.push({
-      keyword: 'LIMIT',
-      role: 'Pagination',
-      detail: 'Restricts the number of returned rows',
-    })
+    glossary.push({ keyword: 'LIMIT', role: 'Pagination', detail: 'Restricts the number of returned rows' })
   }
 
   return { nodes, edges, glossary }
+}
+
+// ─── DML helpers ─────────────────────────────────────────────────────────────
+
+function extractInsertTable(raw: unknown): string {
+  if (Array.isArray(raw)) return (raw[0]?.table as string) ?? 'table'
+  return (raw as string) ?? 'table'
+}
+
+interface DmlCtx {
+  nodes: Node<SQLNodeData>[]
+  edges: Edge[]
+  glossary: GlossaryEntry[]
+  nextId: (t: string) => string
+}
+
+function addWhereNode(where: unknown, lastId: string, ctx: DmlCtx): string {
+  if (!where) return lastId
+  const cond = stringifyCondition(where)
+  const id = ctx.nextId('filter')
+  ctx.nodes.push({ id, type: 'filterNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'filter', label: `WHERE ${cond}`, detail: `Filters rows.`, clause: `WHERE ${cond}` } })
+  ctx.edges.push(makeFilterEdge(lastId, id))
+  ctx.glossary.push({ keyword: 'WHERE', role: 'Filter', detail: 'Restricts affected rows' })
+  return id
+}
+
+function buildUpdateGraph(stmt: Record<string, unknown>, nextId: (t: string) => string): GraphResult {
+  const ctx: DmlCtx = { nodes: [], edges: [], glossary: [], nextId }
+  const tables = stmt.table as Array<Record<string, unknown>> | null
+  const raw = Array.isArray(tables) ? tables[0] : null
+  const name = (raw?.table as string) ?? 'table'
+  const alias = raw?.as as string | null
+  const label = alias ? `${name} (${alias})` : name
+  const tableId = nextId('table')
+  ctx.nodes.push({ id: tableId, type: 'tableNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'table', label, detail: `Target table for UPDATE.`, clause: `UPDATE ${label}` } })
+  const lastId = addWhereNode(stmt.where, tableId, ctx)
+  const setCols = (stmt.set as Array<Record<string, unknown>> | null)?.map(s => s.column as string).join(', ') ?? '...'
+  const setId = nextId('output')
+  ctx.nodes.push({ id: setId, type: 'outputNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'output', label: `SET ${setCols}`, detail: `Updates: ${setCols}.`, clause: `SET ${setCols}` } })
+  ctx.edges.push(makeDataEdge(lastId, setId))
+  ctx.glossary.push({ keyword: 'UPDATE', role: 'DML', detail: 'Modifies existing rows' })
+  return { nodes: ctx.nodes, edges: ctx.edges, glossary: ctx.glossary }
+}
+
+function buildDeleteGraph(stmt: Record<string, unknown>, nextId: (t: string) => string): GraphResult {
+  const ctx: DmlCtx = { nodes: [], edges: [], glossary: [], nextId }
+  const from = stmt.from as Array<Record<string, unknown>> | null
+  const name = Array.isArray(from) ? ((from[0]?.table as string) ?? 'table') : 'table'
+  const tableId = nextId('table')
+  ctx.nodes.push({ id: tableId, type: 'tableNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'table', label: name, detail: `Rows deleted from ${name}.`, clause: `DELETE FROM ${name}` } })
+  const lastId = addWhereNode(stmt.where, tableId, ctx)
+  const outId = nextId('output')
+  ctx.nodes.push({ id: outId, type: 'outputNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'output', label: 'DELETE', detail: 'Removes matching rows.', clause: 'DELETE' } })
+  ctx.edges.push(makeDataEdge(lastId, outId))
+  ctx.glossary.push({ keyword: 'DELETE', role: 'DML', detail: 'Removes rows from a table' })
+  return { nodes: ctx.nodes, edges: ctx.edges, glossary: ctx.glossary }
+}
+
+function buildInsertSelectGraph(
+  stmt: Record<string, unknown>,
+  dialect: Dialect,
+  nextId: (t: string) => string,
+): GraphResult {
+  const selectAst = stmt.values as Record<string, unknown>
+  const inner = astToGraphInner(selectAst, dialect, nextId, new Map(), new Set())
+  const tableName = extractInsertTable(stmt.table)
+  const tableId = nextId('table')
+  const targetNode: Node<SQLNodeData> = {
+    id: tableId, type: 'tableNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'table', label: tableName, detail: `Inserts into ${tableName}.`, clause: `INSERT INTO ${tableName}` },
+  }
+  const lastNode = inner.nodes[inner.nodes.length - 1]
+  inner.glossary.push({ keyword: 'INSERT', role: 'DML', detail: 'Inserts SELECT results into a table' })
+  return {
+    nodes: [...inner.nodes, targetNode],
+    edges: lastNode ? [...inner.edges, makeDataEdge(lastNode.id, tableId)] : inner.edges,
+    glossary: inner.glossary,
+  }
+}
+
+function buildInsertGraph(
+  stmt: Record<string, unknown>,
+  dialect: Dialect,
+  nextId: (t: string) => string,
+): GraphResult {
+  const ctx: DmlCtx = { nodes: [], edges: [], glossary: [], nextId }
+  const valuesRaw = stmt.values
+  const isSelectValues = typeof valuesRaw === 'object' && !Array.isArray(valuesRaw)
+    && (valuesRaw as Record<string, unknown>)?.type === 'select'
+  if (isSelectValues) return buildInsertSelectGraph(stmt, dialect, nextId)
+  const tableName = extractInsertTable(stmt.table)
+  const cols = (stmt.columns as string[] | null)?.join(', ') ?? '...'
+  const valId = nextId('output')
+  ctx.nodes.push({ id: valId, type: 'outputNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'output', label: 'VALUES', detail: 'New row data to insert.', clause: 'VALUES' } })
+  const tableId = nextId('table')
+  ctx.nodes.push({ id: tableId, type: 'tableNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'table', label: tableName, detail: `Inserts into ${tableName} (${cols}).`, clause: `INSERT INTO ${tableName}` } })
+  ctx.edges.push(makeDataEdge(valId, tableId))
+  ctx.glossary.push({ keyword: 'INSERT', role: 'DML', detail: 'Adds new rows to a table' })
+  return { nodes: ctx.nodes, edges: ctx.edges, glossary: ctx.glossary }
 }
 
 // ─── Edge factories ───────────────────────────────────────────────────────────
@@ -460,11 +567,12 @@ function makeDataEdge(source: string, target: string): Edge {
   }
 }
 
-function makeJoinEdge(source: string, target: string): Edge {
+function makeJoinEdge(source: string, target: string, targetHandle?: string): Edge {
   return {
-    id: `e-${source}-${target}`,
+    id: `e-${source}-${target}-${targetHandle ?? ''}`,
     source,
     target,
+    targetHandle,
     animated: true,
     style: { stroke: '#5DCAA5', strokeWidth: 1.5, strokeDasharray: '5,4' },
     markerEnd: { type: MarkerType.ArrowClosed, color: '#5DCAA5' },
@@ -482,30 +590,35 @@ function makeFilterEdge(source: string, target: string): Edge {
   }
 }
 
-function makeCteEdge(source: string, target: string, edgeId: string): Edge {
-  return {
-    id: edgeId,
-    source,
-    target,
-    animated: false,
-    style: { stroke: '#8B7CF8', strokeWidth: 1.5, strokeDasharray: '6,4' },
-  }
+// ─── Condition stringifier ────────────────────────────────────────────────────
+
+function stringifyArgs(args: unknown): string {
+  const a = args as Record<string, unknown> | undefined
+  if (a?.type !== 'expr_list') return a ? '...' : ''
+  return (a.value as unknown[]).map(stringifyCondition).join(', ')
 }
 
-// ─── Condition stringifier ────────────────────────────────────────────────────
+type CondHandler = (c: Record<string, unknown>) => string
+
+const COND_HANDLERS: Record<string, CondHandler> = {
+  binary_expr:          c => `${stringifyCondition(c.left)} ${c.operator} ${stringifyCondition(c.right)}`,
+  column_ref:           c => `${c.table ? `${c.table}.` : ''}${c.column}`,
+  unary_expr:           c => `${c.operator as string} ${stringifyCondition(c.expr)}`,
+  function:             c => `${c.name as string}(${stringifyArgs(c.args)})`,
+  aggr_func:            c => `${c.name as string}(${stringifyArgs(c.args)})`,
+  number:               c => String(c.value),
+  single_quote_string:  c => `'${c.value}'`,
+  string:               c => `'${c.value}'`,
+  null:                 () => 'NULL',
+  star:                 () => '*',
+  expr_list:            c => (c.value as unknown[]).map(stringifyCondition).join(', '),
+}
 
 function stringifyCondition(cond: unknown): string {
   if (!cond) return ''
   if (typeof cond === 'string') return cond
   const c = cond as Record<string, unknown>
-  if (c.type === 'binary_expr') {
-    return `${stringifyCondition(c.left)} ${c.operator} ${stringifyCondition(c.right)}`
-  }
-  if (c.type === 'column_ref') {
-    const table = c.table ? `${c.table}.` : ''
-    return `${table}${c.column}`
-  }
-  if (c.type === 'number') return String(c.value)
-  if (c.type === 'single_quote_string' || c.type === 'string') return `'${c.value}'`
-  return String(c.value ?? JSON.stringify(c))
+  const handler = COND_HANDLERS[c.type as string]
+  if (handler) return handler(c)
+  return c.value != null ? String(c.value) : '?'
 }

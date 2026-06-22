@@ -1,24 +1,28 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { NODE_COLORS, getDiffBorder } from './index'
+import { BaseNodeCard } from './BaseNode'
+import { NODE_COLORS, NODE_BG, getDiffBorder } from './node-utils'
 import type { SQLNodeData } from '@/types'
 
 export const SortNode = memo(function SortNode({ data, selected }: NodeProps<Node<SQLNodeData>>) {
-  const colors = NODE_COLORS.sort
+  const c = NODE_COLORS.sort
   return (
-    <div style={{
-      background: colors.bg, border: `1.5px solid ${getDiffBorder(data, colors.border)}`, borderRadius: 8,
-      padding: '10px 14px', minWidth: 200, maxWidth: 260,
-      opacity: data.isActive === false ? 0.3 : 1, transition: 'opacity 0.3s',
-      outline: selected ? `2px solid ${colors.border}` : 'none', outlineOffset: 2,
-    }}>
+    <div>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-        <span style={{ fontSize: 12 }}>{colors.icon}</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: colors.text, fontFamily: 'monospace' }}>{data.label}</span>
-      </div>
-      <p style={{ fontSize: 11, color: colors.text, margin: 0, lineHeight: 1.4, opacity: 0.75 }}>{data.detail}</p>
+      <BaseNodeCard
+        nodeType="sort"
+        label={data.label}
+        detail={data.detail}
+        clause={data.clause}
+        accentColor={getDiffBorder(data, c.border)}
+        textColor={c.text}
+        bgColor={NODE_BG.sort}
+        borderColor={c.border}
+        isActive={data.isActive}
+        selected={selected}
+        diffStatus={data.diffStatus}
+      />
     </div>
   )
 })

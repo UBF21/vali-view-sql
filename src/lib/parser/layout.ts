@@ -1,74 +1,96 @@
 import type { Node, Edge } from '@xyflow/react'
 import type { SQLNodeData } from '@/types'
 
-const NODE_WIDTH = 240
-const NODE_HEIGHT = 90
-const H_GAP = 60
-const V_GAP = 80
+const NODE_WIDTH = 320
+const NODE_HEIGHT = 100
+const H_GAP = 100
+const V_GAP = 110
 
-export function autoLayout(
+// ── Adjacency helpers ─────────────────────────────────────────────────────────
+
+interface ReverseGraph {
+  outDegree: Map<string, number>
+  reverseAdj: Map<string, string[]>
+  remainingSuccessors: Map<string, number>
+}
+
+function buildReverseGraph(
   nodes: Node<SQLNodeData>[],
-  edges: Edge[]
-): Node<SQLNodeData>[] {
-  if (nodes.length === 0) return nodes
+  layoutEdges: Edge[],
+): ReverseGraph {
+  const outDegree = new Map<string, number>()
+  const reverseAdj = new Map<string, string[]>()
+  const remainingSuccessors = new Map<string, number>()
 
-  const levels = new Map<string, number>()
-  const inDegree = new Map<string, number>()
-  const adjList = new Map<string, string[]>()
-
-  for (const node of nodes) {
-    inDegree.set(node.id, 0)
-    adjList.set(node.id, [])
-  }
-  for (const edge of edges) {
-    inDegree.set(edge.target, (inDegree.get(edge.target) ?? 0) + 1)
-    adjList.get(edge.source)?.push(edge.target)
+  for (const n of nodes) {
+    outDegree.set(n.id, 0)
+    reverseAdj.set(n.id, [])
+    remainingSuccessors.set(n.id, 0)
   }
 
-  // Kahn's algorithm — topological order con longest-path level assignment
+  for (const e of layoutEdges) {
+    outDegree.set(e.source, (outDegree.get(e.source) ?? 0) + 1)
+    reverseAdj.get(e.target)?.push(e.source)
+    remainingSuccessors.set(e.source, (remainingSuccessors.get(e.source) ?? 0) + 1)
+  }
+
+  return { outDegree, reverseAdj, remainingSuccessors }
+}
+
+// ── Backward Kahn's — longest path from node to any sink ─────────────────────
+
+function computeBackwardLevels(
+  nodes: Node<SQLNodeData>[],
+  { outDegree, reverseAdj, remainingSuccessors }: ReverseGraph,
+): Map<string, number> {
+  const backLevels = new Map<string, number>()
   const queue: string[] = []
-  for (const [id, deg] of inDegree) {
-    if (deg === 0) {
-      queue.push(id)
-      levels.set(id, 0)
-    }
+
+  for (const [id, deg] of outDegree) {
+    if (deg === 0) { queue.push(id); backLevels.set(id, 0) }
   }
 
   while (queue.length > 0) {
-    const current = queue.shift()!
-    const currentLevel = levels.get(current) ?? 0
-    for (const neighbor of adjList.get(current) ?? []) {
-      const newLevel = currentLevel + 1
-      if ((levels.get(neighbor) ?? -1) < newLevel) {
-        levels.set(neighbor, newLevel)
-      }
-      const newDeg = (inDegree.get(neighbor) ?? 0) - 1
-      inDegree.set(neighbor, newDeg)
-      if (newDeg === 0) queue.push(neighbor)
+    const cur = queue.shift()!
+    const curLevel = backLevels.get(cur) ?? 0
+    for (const pred of reverseAdj.get(cur) ?? []) {
+      const lvl = curLevel + 1
+      if ((backLevels.get(pred) ?? -1) < lvl) backLevels.set(pred, lvl)
+      const rem = (remainingSuccessors.get(pred) ?? 0) - 1
+      remainingSuccessors.set(pred, rem)
+      if (rem === 0) queue.push(pred)
     }
   }
 
-  // Nodos sin nivel asignado (aislados) → nivel 0
-  for (const node of nodes) {
-    if (!levels.has(node.id)) levels.set(node.id, 0)
+  // Isolated nodes or nodes in multi-node cycles → backLevel 0 (bottom)
+  for (const n of nodes) {
+    if (!backLevels.has(n.id)) backLevels.set(n.id, 0)
   }
 
-  // Agrupar por nivel
+  return backLevels
+}
+
+// ── Level grouping and position assignment ────────────────────────────────────
+
+function groupByDisplayLevel(backLevels: Map<string, number>): Map<number, string[]> {
+  const maxBack = backLevels.size > 0 ? Math.max(...backLevels.values()) : 0
   const byLevel = new Map<number, string[]>()
-  for (const [id, level] of levels) {
-    if (!byLevel.has(level)) byLevel.set(level, [])
-    byLevel.get(level)!.push(id)
+
+  for (const [id, back] of backLevels) {
+    const display = maxBack - back
+    if (!byLevel.has(display)) byLevel.set(display, [])
+    byLevel.get(display)!.push(id)
   }
 
-  // Asignar posiciones x/y centradas por nivel
+  return byLevel
+}
+
+function assignPositions(byLevel: Map<number, string[]>): Map<string, { x: number; y: number }> {
   const positions = new Map<string, { x: number; y: number }>()
+
   for (const [level, levelNodes] of byLevel) {
     const count = levelNodes.length
-    // totalWidth = ancho ocupado por los nodos sin incluir el último gap
     const totalWidth = count * NODE_WIDTH + (count - 1) * H_GAP
-    // Centrar: el primer nodo arranca en -totalWidth/2
-    // Con un solo nodo: totalWidth = NODE_WIDTH → startX = -NODE_WIDTH/2
-    // pero queremos que el centro del nodo quede en x=0, entonces startX = 0
     const startX = count === 1 ? 0 : -totalWidth / 2
     levelNodes.forEach((id, i) => {
       positions.set(id, {
@@ -78,8 +100,23 @@ export function autoLayout(
     })
   }
 
-  return nodes.map(node => ({
-    ...node,
-    position: positions.get(node.id) ?? { x: 0, y: 0 },
-  }))
+  return positions
+}
+
+// ── Public entry point ────────────────────────────────────────────────────────
+
+export function autoLayout(
+  nodes: Node<SQLNodeData>[],
+  edges: Edge[],
+): Node<SQLNodeData>[] {
+  if (nodes.length === 0) return nodes
+
+  // Self-loops must not affect level assignment
+  const layoutEdges = edges.filter(e => e.source !== e.target)
+  const graph = buildReverseGraph(nodes, layoutEdges)
+  const backLevels = computeBackwardLevels(nodes, graph)
+  const byLevel = groupByDisplayLevel(backLevels)
+  const positions = assignPositions(byLevel)
+
+  return nodes.map(n => ({ ...n, position: positions.get(n.id) ?? { x: 0, y: 0 } }))
 }

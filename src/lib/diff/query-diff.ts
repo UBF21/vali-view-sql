@@ -1,9 +1,11 @@
-import type { Node } from '@xyflow/react'
+import type { Node, Edge } from '@xyflow/react'
 import type { DiffResult, ParseResult, SQLNodeData } from '@/types'
 
 export interface DiffDecorated {
   nodesA: Node<SQLNodeData>[]
   nodesB: Node<SQLNodeData>[]
+  edgesA: Edge[]
+  edgesB: Edge[]
   diff: DiffResult
 }
 
@@ -77,5 +79,19 @@ export function diffQueries(resultA: ParseResult, resultB: ParseResult): DiffDec
     changedNodes
   )
 
-  return { nodesA, nodesB, diff }
+  function decorateEdges(edges: Edge[], decoratedNodes: Node<SQLNodeData>[]): Edge[] {
+    const statusMap = new Map(decoratedNodes.map(n => [n.id, n.data.diffStatus]))
+    return edges.map(e => {
+      const srcStatus = statusMap.get(e.source)
+      const tgtStatus = statusMap.get(e.target)
+      const dominant = srcStatus !== 'same' ? srcStatus : tgtStatus
+      if (!dominant || dominant === 'same') return e
+      const color = dominant === 'added' ? '#22C55E' : dominant === 'removed' ? '#EF4444' : '#EAB308'
+      return { ...e, style: { ...((e.style as object) ?? {}), stroke: color, strokeDasharray: '4 3' } }
+    })
+  }
+
+  const edgesA = decorateEdges(resultA.edges, nodesA)
+  const edgesB = decorateEdges(resultB.edges, nodesB)
+  return { nodesA, nodesB, edgesA, edgesB, diff }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Download } from 'lucide-react'
 import { useExport } from '@/hooks/useExport'
 
 export function ExportButton() {
@@ -26,6 +27,9 @@ export function ExportButton() {
     color: 'var(--text-secondary)',
     opacity: exporting && exporting !== type ? 0.5 : 1,
     transition: 'opacity 0.15s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
   })
 
   return (
@@ -36,7 +40,7 @@ export function ExportButton() {
         aria-label="Export diagram as PNG"
         style={btnStyle('png')}
       >
-        {exporting === 'png' ? '...' : '↓ PNG'}
+        {exporting === 'png' ? '...' : <><Download size={13} /> PNG</>}
       </button>
       <button
         onClick={() => handle('svg')}
@@ -44,7 +48,7 @@ export function ExportButton() {
         aria-label="Export diagram as SVG"
         style={btnStyle('svg')}
       >
-        {exporting === 'svg' ? '...' : '↓ SVG'}
+        {exporting === 'svg' ? '...' : <><Download size={13} /> SVG</>}
       </button>
     </div>
   )

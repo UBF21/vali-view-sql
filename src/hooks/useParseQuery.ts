@@ -36,7 +36,9 @@ export function useParseQuery() {
         setParseResult(result)
         setParseError(null)
 
-        const issues = runAnalyzers(result.rawAst, query, dialect)
+        const issues = result.rawAst != null
+          ? runAnalyzers(result.rawAst, query, dialect)
+          : []
         setIssues(issues)
 
         const suggestions = generateSuggestions(result.rawAst, issues, query)
