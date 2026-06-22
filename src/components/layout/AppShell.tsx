@@ -13,6 +13,10 @@ import { ExportButton } from '@/components/diagram/ExportButton'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
 import { HistoryPicker } from '@/components/editor/HistoryPicker'
 import type { Node, Edge, SQLNodeData } from '@/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import { MobileExplainLayout } from '@/components/mobile/MobileExplainLayout'
+import { MobileDiffLayout } from '@/components/mobile/MobileDiffLayout'
+import { MobileStepperLayout } from '@/components/mobile/MobileStepperLayout'
 
 export function AppShell() {
   const query = useAppStore((s) => s.query)
@@ -40,6 +44,7 @@ export function AppShell() {
     [parseResult]
   )
   const stepAnimation = useStepAnimation(steps)
+  const isMobile = useIsMobile()
 
   const stepAnimRef = useRef(stepAnimation)
   stepAnimRef.current = stepAnimation
@@ -152,6 +157,27 @@ export function AppShell() {
         <StepperControls state={stepAnimation} />
       </div>
     </div>
+  )
+
+  const mobileExplainContent = (
+    <MobileExplainLayout
+      nodes={nodes}
+      edges={edges}
+      isLoading={isLoading}
+      highlightClause={highlightClause}
+    />
+  )
+
+  const mobileDiffContent = <MobileDiffLayout />
+
+  const mobileStepperContent = (
+    <MobileStepperLayout
+      nodes={stepNodes}
+      edges={stepEdges}
+      isLoading={isLoading}
+      stepAnimation={stepAnimation}
+      highlightClause={highlightClause}
+    />
   )
 
   const diffContent = <DiffContent />
@@ -348,7 +374,10 @@ export function AppShell() {
       }}
     >
       <Header />
-      {mode === 'stepper' ? stepperContent : mode === 'diff' ? diffContent : explainContent}
+      {isMobile
+        ? (mode === 'stepper' ? mobileStepperContent : mode === 'diff' ? mobileDiffContent : mobileExplainContent)
+        : (mode === 'stepper' ? stepperContent : mode === 'diff' ? diffContent : explainContent)
+      }
     </div>
   )
 }
