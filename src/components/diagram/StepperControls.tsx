@@ -189,7 +189,7 @@ export const StepperControls = memo(function StepperControls({ state }: StepperC
           <StepDescription step={currentStep} currentIndex={currentIndex} totalSteps={totalSteps} isComplete={isComplete} />
         )}
         <ControlsRow state={state} />
-        <div style={{ fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.03em' }}>
+        <div className="stepper-keyboard-hint" style={{ fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.03em' }}>
           ← → navigate · Space play/pause · Home first · End last
         </div>
       </div>
