@@ -16,7 +16,6 @@ import type { StepAnimationState } from '@/hooks/useStepAnimation'
 interface MobileStepperLayoutProps {
   nodes: Node<SQLNodeData>[]
   edges: Edge[]
-  isLoading: boolean
   stepAnimation: StepAnimationState
   highlightClause?: string
 }
@@ -79,7 +78,7 @@ function SheetHeader({ onClose }: SheetHeaderProps) {
 
 // ── Public component ──────────────────────────────────────────────────────────
 
-export function MobileStepperLayout({ nodes, edges, isLoading, stepAnimation, highlightClause }: MobileStepperLayoutProps) {
+export function MobileStepperLayout({ nodes, edges, stepAnimation, highlightClause }: MobileStepperLayoutProps) {
   const query    = useAppStore(s => s.query)
   const setQuery = useAppStore(s => s.setQuery)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -90,7 +89,7 @@ export function MobileStepperLayout({ nodes, edges, isLoading, stepAnimation, hi
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <DiagramCanvas nodes={nodes} edges={edges} isLoading={isLoading} />
+        <DiagramCanvas nodes={nodes} edges={edges} />
         <SqlFab onClick={openEditor} />
       </div>
 

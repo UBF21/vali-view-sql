@@ -14,7 +14,6 @@ import type { SQLNodeData } from '@/types'
 interface MobileExplainLayoutProps {
   nodes: Node<SQLNodeData>[]
   edges: Edge[]
-  isLoading: boolean
   highlightClause?: string
 }
 
@@ -41,13 +40,12 @@ function EditorView({ query, setQuery, highlightClause }: EditorViewProps) {
 interface DiagramViewProps {
   nodes: Node<SQLNodeData>[]
   edges: Edge[]
-  isLoading: boolean
 }
 
-function DiagramView({ nodes, edges, isLoading }: DiagramViewProps) {
+function DiagramView({ nodes, edges }: DiagramViewProps) {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <DiagramCanvas nodes={nodes} edges={edges} isLoading={isLoading} />
+      <DiagramCanvas nodes={nodes} edges={edges} />
       <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
         <ExportButton />
       </div>
@@ -57,7 +55,7 @@ function DiagramView({ nodes, edges, isLoading }: DiagramViewProps) {
 
 // ── Public component ──────────────────────────────────────────────────────────
 
-export function MobileExplainLayout({ nodes, edges, isLoading, highlightClause }: MobileExplainLayoutProps) {
+export function MobileExplainLayout({ nodes, edges, highlightClause }: MobileExplainLayoutProps) {
   const query = useAppStore(s => s.query)
   const setQuery = useAppStore(s => s.setQuery)
 
@@ -72,7 +70,7 @@ export function MobileExplainLayout({ nodes, edges, isLoading, highlightClause }
       key: 'diagram',
       label: 'Diagram',
       icon: <Network size={13} />,
-      content: <DiagramView nodes={nodes} edges={edges} isLoading={isLoading} />,
+      content: <DiagramView nodes={nodes} edges={edges} />,
     },
     {
       key: 'analysis',
@@ -80,7 +78,7 @@ export function MobileExplainLayout({ nodes, edges, isLoading, highlightClause }
       icon: <BookOpen size={13} />,
       content: <PanelRight />,
     },
-  ], [query, setQuery, nodes, edges, isLoading, highlightClause])
+  ], [query, setQuery, nodes, edges, highlightClause])
 
   return <MobileSwipeLayout views={views} defaultIndex={1} />
 }

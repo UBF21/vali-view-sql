@@ -154,7 +154,7 @@ export function AppShell() {
       {/* Diagram + stepper controls */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-          <DiagramCanvas nodes={stepNodes} edges={stepEdges} isLoading={isLoading} />
+          <DiagramCanvas nodes={stepNodes} edges={stepEdges} />
         </div>
         <StepperControls state={stepAnimation} />
       </div>
@@ -165,7 +165,6 @@ export function AppShell() {
     <MobileExplainLayout
       nodes={nodes}
       edges={edges}
-      isLoading={isLoading}
       highlightClause={highlightClause}
     />
   )
@@ -176,7 +175,6 @@ export function AppShell() {
     <MobileStepperLayout
       nodes={stepNodes}
       edges={stepEdges}
-      isLoading={isLoading}
       stepAnimation={stepAnimation}
       highlightClause={highlightClause}
     />
@@ -258,7 +256,7 @@ export function AppShell() {
           </div>
         )}
         <div style={{ width: '100%', height: '100%' }}>
-          <DiagramCanvas nodes={nodes} edges={edges} isLoading={isLoading} />
+          <DiagramCanvas nodes={nodes} edges={edges} />
         </div>
         <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
           <ExportButton />
