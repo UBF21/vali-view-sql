@@ -95,19 +95,22 @@ function DialectRow({ d, isActive, onSelect }: { d: DialectOption; isActive: boo
   )
 }
 
-interface DropCoords { top: number; right: number }
+const DROPDOWN_H = 188 // altura aprox del listbox con 3 opciones
+
+interface DropCoords { top?: number; bottom?: number; right: number }
 
 function DialectDropdown({ value, onSelect, coords }: { value: Dialect; onSelect: (d: Dialect) => void; coords: DropCoords }) {
+  const openUp = coords.bottom !== undefined
   return (
     <motion.div
       role="listbox"
       aria-label="Select SQL dialect"
-      initial={{ opacity: 0, y: -6, scale: 0.97 }}
+      initial={{ opacity: 0, y: openUp ? 6 : -6, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -6, scale: 0.97 }}
+      exit={{ opacity: 0, y: openUp ? 6 : -6, scale: 0.97 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       style={{
-        position: 'fixed', top: coords.top, right: coords.right,
+        position: 'fixed', top: coords.top, bottom: coords.bottom, right: coords.right,
         width: 220, zIndex: 9999,
         background: 'var(--surface)', border: '1px solid var(--border-hi)',
         borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', overflow: 'hidden', padding: 4,
@@ -142,7 +145,13 @@ function useDropdown(ref: React.RefObject<HTMLDivElement | null>, onChange: (d: 
   useEffect(() => {
     if (!open || !ref.current) { setDropCoords(null); return }
     const r = ref.current.getBoundingClientRect()
-    setDropCoords({ top: r.bottom + 6, right: window.innerWidth - r.right })
+    const right = window.innerWidth - r.right
+    const spaceBelow = window.innerHeight - r.bottom
+    setDropCoords(
+      spaceBelow < DROPDOWN_H + 12
+        ? { bottom: window.innerHeight - r.top + 6, right }
+        : { top: r.bottom + 6, right },
+    )
   }, [open, ref])
 
   const handleSelect = useCallback((d: Dialect) => { onChange(d); setOpen(false) }, [onChange])
