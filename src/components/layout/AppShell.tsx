@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { Code2, AlertTriangle, BookOpen, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, X, LayoutGrid } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { Header } from './Header'
@@ -47,7 +47,9 @@ export function AppShell() {
   const isMobile = useIsMobile()
 
   const stepAnimRef = useRef(stepAnimation)
-  stepAnimRef.current = stepAnimation
+  useLayoutEffect(() => {
+    stepAnimRef.current = stepAnimation
+  })
 
   useEffect(() => {
     if (mode !== 'stepper') return
