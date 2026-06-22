@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Code2, Network, BookOpen } from 'lucide-react'
 import { MobileSwipeLayout } from './MobileSwipeLayout'
 import { QueryEditor } from '@/components/editor/QueryEditor'
 import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
@@ -63,17 +64,20 @@ export function MobileExplainLayout({ nodes, edges, isLoading, highlightClause }
   const views = useMemo(() => [
     {
       key: 'editor',
-      label: '✏️ Editor',
+      label: 'Editor',
+      icon: <Code2 size={13} />,
       content: <EditorView query={query} setQuery={setQuery} highlightClause={highlightClause} />,
     },
     {
       key: 'diagram',
-      label: '⬡ Diagram',
+      label: 'Diagram',
+      icon: <Network size={13} />,
       content: <DiagramView nodes={nodes} edges={edges} isLoading={isLoading} />,
     },
     {
       key: 'analysis',
-      label: '📊 Analysis',
+      label: 'Analysis',
+      icon: <BookOpen size={13} />,
       content: <PanelRight />,
     },
   ], [query, setQuery, nodes, edges, isLoading, highlightClause])

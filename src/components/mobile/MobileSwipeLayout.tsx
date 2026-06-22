@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 export interface SwipeView {
   key: string
   label: string
+  icon?: React.ReactNode
   color?: string
   content: React.ReactNode
 }
@@ -76,7 +77,10 @@ function TabBar({ views, activeIndex, onSelect }: TabBarProps) {
         const color = view.color ?? 'var(--a)'
         return (
           <button key={view.key} onClick={() => onSelect(i)} style={tabStyle(isActive, color)}>
-            {view.label}
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              {view.icon && <span style={{ display: 'flex', opacity: isActive ? 1 : 0.5 }}>{view.icon}</span>}
+              {view.label}
+            </span>
           </button>
         )
       })}
