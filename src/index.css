@@ -124,6 +124,12 @@
 }
 *::-webkit-scrollbar { display: none; }
 
+button {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 body {
   background-color: var(--void);
   color: var(--text-1);
