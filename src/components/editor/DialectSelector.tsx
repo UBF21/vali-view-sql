@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { siPostgresql, siMysql } from 'simple-icons'
@@ -58,13 +59,13 @@ function DialectTrigger({ active, open, onClick }: { active: DialectOption; open
         display: 'flex', alignItems: 'center', gap: 7,
         padding: '4px 9px 4px 6px',
         background: 'var(--elevated)', border: '1px solid var(--border-hi)',
-        borderRadius: 8, cursor: 'pointer',
+        borderRadius: 8, cursor: 'pointer', userSelect: 'none',
         transition: 'border-color 0.15s, background 0.15s',
       }}
     >
       <active.Icon size={20} />
-      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', whiteSpace: 'nowrap' }}>{active.label}</span>
-      <ChevronDown size={12} style={{ color: 'var(--text-3)', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
+      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', whiteSpace: 'nowrap', pointerEvents: 'none' }}>{active.label}</span>
+      <ChevronDown size={12} style={{ color: 'var(--text-3)', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0, pointerEvents: 'none' }} />
     </button>
   )
 }
@@ -81,6 +82,7 @@ function DialectRow({ d, isActive, onSelect }: { d: DialectOption; isActive: boo
         background: isActive ? 'var(--a-soft)' : 'transparent',
         border: isActive ? '1px solid var(--a-border)' : '1px solid transparent',
         transition: 'background 0.12s',
+        userSelect: 'none',
       }}
     >
       <d.Icon size={30} />
@@ -93,7 +95,9 @@ function DialectRow({ d, isActive, onSelect }: { d: DialectOption; isActive: boo
   )
 }
 
-function DialectDropdown({ value, onSelect }: { value: Dialect; onSelect: (d: Dialect) => void }) {
+interface DropCoords { top: number; right: number }
+
+function DialectDropdown({ value, onSelect, coords }: { value: Dialect; onSelect: (d: Dialect) => void; coords: DropCoords }) {
   return (
     <motion.div
       role="listbox"
@@ -103,7 +107,8 @@ function DialectDropdown({ value, onSelect }: { value: Dialect; onSelect: (d: Di
       exit={{ opacity: 0, y: -6, scale: 0.97 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       style={{
-        position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 220, zIndex: 200,
+        position: 'fixed', top: coords.top, right: coords.right,
+        width: 220, zIndex: 9999,
         background: 'var(--surface)', border: '1px solid var(--border-hi)',
         borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', overflow: 'hidden', padding: 4,
       }}
@@ -115,6 +120,35 @@ function DialectDropdown({ value, onSelect }: { value: Dialect; onSelect: (d: Di
   )
 }
 
+// ── Dropdown state hook ───────────────────────────────────────────────────────
+
+function useDropdown(ref: React.RefObject<HTMLDivElement | null>, onChange: (d: Dialect) => void) {
+  const [open, setOpen] = useState(false)
+  const [dropCoords, setDropCoords] = useState<DropCoords | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [open, ref])
+
+  useEffect(() => {
+    if (!open || !ref.current) { setDropCoords(null); return }
+    const r = ref.current.getBoundingClientRect()
+    setDropCoords({ top: r.bottom + 6, right: window.innerWidth - r.right })
+  }, [open, ref])
+
+  const handleSelect = useCallback((d: Dialect) => { onChange(d); setOpen(false) }, [onChange])
+  return { open, setOpen, dropCoords, handleSelect }
+}
+
 // ── Public component ──────────────────────────────────────────────────────────
 
 interface DialectSelectorProps {
@@ -123,27 +157,19 @@ interface DialectSelectorProps {
 }
 
 export function DialectSelector({ value, onChange }: DialectSelectorProps) {
-  const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const active = DIALECTS.find(d => d.value === value) ?? DIALECTS[0]
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-
-  const handleSelect = useCallback((d: Dialect) => { onChange(d); setOpen(false) }, [onChange])
+  const { open, setOpen, dropCoords, handleSelect } = useDropdown(ref, onChange)
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <DialectTrigger active={active} open={open} onClick={() => setOpen(v => !v)} />
-      <AnimatePresence>
-        {open && <DialectDropdown value={value} onSelect={handleSelect} />}
-      </AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
+          {open && dropCoords && <DialectDropdown value={value} onSelect={handleSelect} coords={dropCoords} />}
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   )
 }
