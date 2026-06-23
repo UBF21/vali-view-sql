@@ -31,6 +31,7 @@ function walkJoins(node: any, joins: JoinCond[]): void {
       rightTable: (node.on.right.table ?? '').toLowerCase(),
       rightCol:   (node.on.right.column ?? '').toLowerCase(),
     })
+    return  // avoid re-entering the same join node's children
   }
   if (Array.isArray(node)) node.forEach(n => walkJoins(n, joins))
   else Object.values(node).forEach(n => walkJoins(n, joins))
