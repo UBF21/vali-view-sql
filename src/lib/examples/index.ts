@@ -394,6 +394,51 @@ WHERE total_spent  > 5000
 WHERE session_start < GETDATE()
   AND is_expired = 1`,
   },
+
+  // ────── SQLite (3) ──────
+  {
+    id: 'sqlite-basic',
+    title: 'Basic SELECT with LIMIT',
+    dialect: 'sqlite',
+    category: 'basic',
+    description: 'Simple SQLite query using INTEGER PRIMARY KEY and LIMIT',
+    sql: `SELECT id, name, email
+FROM users
+WHERE active = 1
+ORDER BY created_at DESC
+LIMIT 10`,
+  },
+  {
+    id: 'sqlite-join',
+    title: 'JOIN with aliases',
+    dialect: 'sqlite',
+    category: 'join',
+    description: 'SQLite INNER JOIN — same as standard SQL',
+    sql: `SELECT u.name, COUNT(o.id) AS order_count, SUM(o.total) AS total_spent
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id
+WHERE o.status = 'completed'
+GROUP BY u.id, u.name
+ORDER BY total_spent DESC`,
+  },
+  {
+    id: 'sqlite-cte',
+    title: 'CTE with aggregation',
+    dialect: 'sqlite',
+    category: 'cte',
+    description: 'SQLite CTE support (available since 3.8.3)',
+    sql: `WITH monthly_totals AS (
+  SELECT
+    strftime('%Y-%m', created_at) AS month,
+    SUM(amount) AS total
+  FROM transactions
+  GROUP BY strftime('%Y-%m', created_at)
+)
+SELECT month, total,
+  SUM(total) OVER (ORDER BY month) AS running_total
+FROM monthly_totals
+ORDER BY month`,
+  },
 ]
 
 export function getExamplesByDialect(dialect: string) {

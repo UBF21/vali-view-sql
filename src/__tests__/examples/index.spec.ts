@@ -23,7 +23,7 @@ describe('EXAMPLES catalog', () => {
   })
 
   it('all dialects are one of the supported values', () => {
-    const VALID = new Set(['postgresql', 'mysql', 'sqlserver'])
+    const VALID = new Set(['postgresql', 'mysql', 'sqlserver', 'sqlite'])
     for (const ex of EXAMPLES) {
       expect(VALID.has(ex.dialect), `${ex.id} has invalid dialect: ${ex.dialect}`).toBe(true)
     }

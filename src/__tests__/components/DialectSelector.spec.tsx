@@ -13,7 +13,7 @@ vi.mock('framer-motion', () => ({
 
 const onChange = vi.fn()
 
-function open(value: 'postgresql' | 'mysql' | 'sqlserver' = 'postgresql') {
+function open(value: 'postgresql' | 'mysql' | 'sqlserver' | 'sqlite' = 'postgresql') {
   render(<DialectSelector value={value} onChange={onChange} />)
   fireEvent.click(screen.getByRole('button', { name: /sql dialect/i }))
 }
@@ -48,9 +48,9 @@ describe('DialectSelector — trigger', () => {
 })
 
 describe('DialectSelector — dropdown', () => {
-  it('shows all 3 options', () => {
+  it('shows all 4 options', () => {
     open()
-    expect(screen.getAllByRole('option')).toHaveLength(3)
+    expect(screen.getAllByRole('option')).toHaveLength(4)
   })
 
   it('marks active option as selected', () => {
@@ -90,8 +90,8 @@ describe('DialectSelector — selection', () => {
 })
 
 describe('DialectSelector — DIALECTS export', () => {
-  it('exports 3 dialects', () => {
-    expect(DIALECTS).toHaveLength(3)
+  it('exports 4 dialects', () => {
+    expect(DIALECTS).toHaveLength(4)
   })
 
   it('each dialect has value, label, abbr, Icon', () => {

@@ -27,6 +27,15 @@ function MsIcon({ size = 24 }: { size?: number }) {
   return <img src="/icons/sqlserver.png" width={size} height={size} alt="SQL Server" style={{ objectFit: 'contain' }} />
 }
 
+function SqLiteIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden>
+      <rect x="2" y="2" width="20" height="20" rx="3" fill="#0F80CC" />
+      <text x="12" y="16" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="bold" fontFamily="monospace">SQ</text>
+    </svg>
+  )
+}
+
 // ── Dialect config ────────────────────────────────────────────────────────────
 
 export interface DialectOption {
@@ -44,6 +53,7 @@ export const DIALECTS: DialectOption[] = [
   { value: 'postgresql', label: 'PostgreSQL', abbr: 'PG', desc: 'Open-source object-relational', color: `#${siPostgresql.hex}`, bg: 'rgba(65,105,225,0.12)', border: 'rgba(65,105,225,0.30)', Icon: PgIcon },
   { value: 'mysql',      label: 'MySQL',      abbr: 'MY', desc: 'Oracle open-source RDBMS',     color: `#${siMysql.hex}`,      bg: 'rgba(68,121,161,0.12)', border: 'rgba(68,121,161,0.30)', Icon: MyIcon },
   { value: 'sqlserver',  label: 'SQL Server', abbr: 'MS', desc: 'Microsoft enterprise RDBMS',   color: '#CC2927',               bg: 'rgba(204,41,39,0.12)',  border: 'rgba(204,41,39,0.30)',  Icon: MsIcon },
+  { value: 'sqlite',     label: 'SQLite',     abbr: 'SQ', desc: 'Embedded file-based database', color: '#0F80CC',               bg: 'rgba(15,128,204,0.12)', border: 'rgba(15,128,204,0.30)', Icon: SqLiteIcon },
 ]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -95,7 +105,7 @@ function DialectRow({ d, isActive, onSelect }: { d: DialectOption; isActive: boo
   )
 }
 
-const DROPDOWN_H = 188 // altura aprox del listbox con 3 opciones
+const DROPDOWN_H = 244 // altura aprox del listbox con 4 opciones
 
 interface DropCoords { top?: number; bottom?: number; right: number }
 
