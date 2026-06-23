@@ -11,7 +11,7 @@ import { useStepAnimation } from '@/hooks/useStepAnimation'
 import { StepperControls } from '@/components/diagram/StepperControls'
 import { ExportButton } from '@/components/diagram/ExportButton'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
-import { HistoryPicker } from '@/components/editor/HistoryPicker'
+import { CollectionPicker } from '@/components/editor/CollectionPicker'
 import type { Node, Edge, SQLNodeData } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { MobileExplainLayout } from '@/components/mobile/MobileExplainLayout'
@@ -221,7 +221,7 @@ export function AppShell() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className="panel-label">SQL Query</span>
             <div style={{ display: 'flex', gap: 6 }}>
-              <HistoryPicker />
+              <CollectionPicker />
               <ExamplePicker />
             </div>
           </div>
@@ -294,7 +294,7 @@ export function AppShell() {
             </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 12, gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <HistoryPicker />
+                <CollectionPicker />
                 <ExamplePicker />
               </div>
               <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />

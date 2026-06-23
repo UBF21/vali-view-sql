@@ -26,8 +26,8 @@ vi.mock('@/components/diagram/ExportButton', () => ({
   ExportButton: () => <button data-testid="export-button">Export</button>,
 }))
 
-vi.mock('@/components/editor/HistoryPicker', () => ({
-  HistoryPicker: () => <button data-testid="history-picker">History</button>,
+vi.mock('@/components/editor/CollectionPicker', () => ({
+  CollectionPicker: () => <button data-testid="collection-picker">Collections</button>,
 }))
 
 vi.mock('@/components/editor/ExamplePicker', () => ({
@@ -65,7 +65,7 @@ describe('MobileExplainLayout', () => {
     render(<MobileExplainLayout {...defaultProps} />)
     fireEvent.click(screen.getByText('Editor'))
     expect(screen.getByTestId('query-editor')).toBeDefined()
-    expect(screen.getByTestId('history-picker')).toBeDefined()
+    expect(screen.getByTestId('collection-picker')).toBeDefined()
     expect(screen.getByTestId('example-picker')).toBeDefined()
     expect(screen.queryByTestId('diagram-canvas')).toBeNull()
   })

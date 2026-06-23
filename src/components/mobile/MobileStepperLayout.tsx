@@ -3,7 +3,7 @@ import { Pencil, X } from 'lucide-react'
 import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
 import { StepperControls } from '@/components/diagram/StepperControls'
 import { QueryEditor } from '@/components/editor/QueryEditor'
-import { HistoryPicker } from '@/components/editor/HistoryPicker'
+import { CollectionPicker } from '@/components/editor/CollectionPicker'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
 import { MobileBottomSheet } from './MobileBottomSheet'
 import { useAppStore } from '@/store/useAppStore'
@@ -58,7 +58,7 @@ function SheetHeader({ onClose }: SheetHeaderProps) {
         SQL Query
       </span>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <HistoryPicker />
+        <CollectionPicker />
         <ExamplePicker />
         <button
           onClick={onClose}

@@ -27,8 +27,8 @@ vi.mock('@/components/editor/QueryEditor', () => ({
   ),
 }))
 
-vi.mock('@/components/editor/HistoryPicker', () => ({
-  HistoryPicker: () => <button data-testid="history-picker">History</button>,
+vi.mock('@/components/editor/CollectionPicker', () => ({
+  CollectionPicker: () => <button data-testid="collection-picker">Collections</button>,
 }))
 
 vi.mock('@/components/editor/ExamplePicker', () => ({
@@ -100,7 +100,7 @@ describe('MobileStepperLayout', () => {
     render(<MobileStepperLayout {...defaultProps} />)
     fireEvent.click(screen.getByLabelText('Open SQL editor'))
     expect(screen.getByTestId('query-editor')).toBeDefined()
-    expect(screen.getByTestId('history-picker')).toBeDefined()
+    expect(screen.getByTestId('collection-picker')).toBeDefined()
     expect(screen.getByTestId('example-picker')).toBeDefined()
   })
 

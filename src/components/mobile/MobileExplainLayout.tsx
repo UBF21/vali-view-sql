@@ -5,7 +5,7 @@ import { QueryEditor } from '@/components/editor/QueryEditor'
 import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
 import { PanelRight } from '@/components/layout/PanelRight'
 import { ExportButton } from '@/components/diagram/ExportButton'
-import { HistoryPicker } from '@/components/editor/HistoryPicker'
+import { CollectionPicker } from '@/components/editor/CollectionPicker'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
 import { useAppStore } from '@/store/useAppStore'
 import type { Node, Edge } from '@xyflow/react'
@@ -30,7 +30,7 @@ function EditorView({ query, setQuery, dialect, highlightClause }: EditorViewPro
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 12, gap: 8 }}>
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-        <HistoryPicker />
+        <CollectionPicker />
         <ExamplePicker />
       </div>
       <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
