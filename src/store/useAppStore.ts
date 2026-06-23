@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware'
 import type { Dialect, AppMode, ParseResult, Issue, Suggestion, NodeType } from '@/types'
 import type { ComplexityResult } from '@/lib/complexity/complexity-score'
 import type { ColumnLineage } from '@/lib/lineage/column-lineage'
+import type { Collection } from '@/lib/collections/types'
+import { MAX_COLLECTIONS } from '@/lib/collections/types'
+import { createCollection, addQueryToCollection, migrateHistoryToCollections } from '@/lib/collections/helpers'
 
 interface HistoryEntry {
   query: string
@@ -50,6 +53,12 @@ interface AppStore {
   clearHistory: () => void
   setInfoNode: (n: InfoNodeData | null) => void
   setComplexityResult: (r: ComplexityResult | null) => void
+
+  collections:           Collection[]
+  saveQueryToCollection: (collectionId: string, input: { name: string; description?: string; tags: string[] }) => void
+  addCollection:         (name: string, color?: string) => void
+  removeCollection:      (collectionId: string) => void
+  renameCollection:      (collectionId: string, newName: string) => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -66,6 +75,7 @@ export const useAppStore = create<AppStore>()(
       isLoading: false,
       parseError: null,
       history: [],
+      collections: [],
       infoNode: null,
       complexityResult: null,
       previousQuery: null,
@@ -95,16 +105,56 @@ export const useAppStore = create<AppStore>()(
           ],
         })),
       clearHistory: () => set({ history: [] }),
+
+      saveQueryToCollection: (collectionId, input) =>
+        set((state) => ({
+          collections: state.collections.map((c) =>
+            c.id === collectionId
+              ? addQueryToCollection(c, { ...input, sql: state.query, dialect: state.dialect })
+              : c
+          ),
+        })),
+
+      addCollection: (name, color) =>
+        set((state) => {
+          if (state.collections.length >= MAX_COLLECTIONS) return {}
+          return { collections: [createCollection(name, color), ...state.collections] }
+        }),
+
+      removeCollection: (collectionId) =>
+        set((state) => ({
+          collections: state.collections.filter((c) => c.id !== collectionId),
+        })),
+
+      renameCollection: (collectionId, newName) =>
+        set((state) => ({
+          collections: state.collections.map((c) =>
+            c.id === collectionId ? { ...c, name: newName } : c
+          ),
+        })),
+
       setInfoNode: (infoNode) => set({ infoNode }),
       setComplexityResult: (complexityResult) => set({ complexityResult }),
     }),
     {
       name: 'vali-viewsql-store',
       partialize: (state) => ({
-        history: state.history,
-        dialect: state.dialect,
-        theme: state.theme,
+        collections: state.collections,
+        dialect:     state.dialect,
+        theme:       state.theme,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        try {
+          const raw = localStorage.getItem('vali-viewsql-store')
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed?.state?.history?.length > 0 && state.collections.length === 0) {
+              state.collections = migrateHistoryToCollections(parsed.state.history)
+            }
+          }
+        } catch { /* ignore */ }
+      },
     }
   )
 )
