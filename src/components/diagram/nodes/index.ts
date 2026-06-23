@@ -15,6 +15,9 @@ import { ParamNode } from './ParamNode'
 import { DeclareNode } from './DeclareNode'
 import { ConditionNode } from './ConditionNode'
 import { LoopNode } from './LoopNode'
+import { MergeNode } from './MergeNode'
+import { PivotNode } from './PivotNode'
+import { UnpivotNode } from './UnpivotNode'
 
 export const customNodeTypes = {
   tableNode: TableNode,
@@ -33,4 +36,7 @@ export const customNodeTypes = {
   declareNode: DeclareNode,
   conditionNode: ConditionNode,
   loopNode: LoopNode,
+  mergeNode: MergeNode,
+  pivotNode: PivotNode,
+  unpivotNode: UnpivotNode,
 }

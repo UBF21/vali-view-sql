@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import {
   Table2, GitMerge, Filter, Sigma, ArrowRight, ArrowUpDown, Hash,
   Layers, RefreshCcw, Database, Code2, Variable, Diamond, Repeat2,
-  GitBranch, Info,
+  GitBranch, Info, Shuffle, LayoutGrid, List,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import type { NodeType } from '@/types'
@@ -25,6 +25,9 @@ const NODE_ICONS: Record<NodeType, React.ReactNode> = {
   declare:    <Variable size={14} />,
   condition:  <Diamond size={14} />,
   loop:       <Repeat2 size={14} />,
+  merge:      <Shuffle size={14} />,
+  pivot:      <LayoutGrid size={14} />,
+  unpivot:    <List size={14} />,
 }
 
 export interface BaseNodeCardProps {
