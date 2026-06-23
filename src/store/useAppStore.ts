@@ -30,9 +30,11 @@ interface AppStore {
   history: HistoryEntry[]
   infoNode: InfoNodeData | null
   complexityResult: ComplexityResult | null
+  previousQuery: string | null
 
   setDialect: (d: Dialect) => void
   setQuery: (q: string) => void
+  undoRewrite: () => void
   setQueryB: (q: string) => void
   setMode: (m: AppMode) => void
   setTheme: (t: 'light' | 'dark') => void
@@ -63,9 +65,15 @@ export const useAppStore = create<AppStore>()(
       history: [],
       infoNode: null,
       complexityResult: null,
+      previousQuery: null,
 
       setDialect: (dialect) => set({ dialect }),
-      setQuery: (query) => set({ query }),
+      setQuery: (query) => set((state) => ({ query, previousQuery: state.query })),
+      undoRewrite: () => set((state) =>
+        state.previousQuery !== null
+          ? { query: state.previousQuery, previousQuery: null }
+          : {}
+      ),
       setQueryB: (queryB) => set({ queryB }),
       setMode: (mode) => set({ mode }),
       setTheme: (theme) => set({ theme }),
