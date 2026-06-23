@@ -27,15 +27,17 @@ export function PanelRight() {
           background: 'var(--bg-elevated)',
           borderBottom: '1px solid var(--border)',
           borderRadius: 0,
-          padding: '4px 8px',
-          gap: 4,
+          padding: '4px 6px',
+          gap: 2,
           height: 40,
           flexShrink: 0,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
         }}>
-          <TabsTrigger value="glossary" style={{ fontSize: 11, padding: '3px 10px' }}>
+          <TabsTrigger value="glossary" style={{ fontSize: 11, padding: '3px 7px', whiteSpace: 'nowrap' }}>
             Glossary
           </TabsTrigger>
-          <TabsTrigger value="issues" style={{ fontSize: 11, padding: '3px 10px', position: 'relative' }}>
+          <TabsTrigger value="issues" style={{ fontSize: 11, padding: '3px 7px', position: 'relative', whiteSpace: 'nowrap' }}>
             Issues
             {(errorCount + warnCount) > 0 && (
               <span style={{
@@ -47,7 +49,7 @@ export function PanelRight() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="suggestions" style={{ fontSize: 11, padding: '3px 10px' }}>
+          <TabsTrigger value="suggestions" style={{ fontSize: 11, padding: '3px 7px', whiteSpace: 'nowrap' }}>
             Suggestions
             {suggestions.length > 0 && (
               <span style={{
@@ -58,10 +60,10 @@ export function PanelRight() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="lineage" style={{ fontSize: 11, padding: '3px 10px' }}>
+          <TabsTrigger value="lineage" style={{ fontSize: 11, padding: '3px 7px', whiteSpace: 'nowrap' }}>
             Lineage
           </TabsTrigger>
-          <TabsTrigger value="schema" style={{ fontSize: 11, padding: '3px 10px' }}>
+          <TabsTrigger value="schema" style={{ fontSize: 11, padding: '3px 7px', whiteSpace: 'nowrap' }}>
             Schema
           </TabsTrigger>
         </TabsList>

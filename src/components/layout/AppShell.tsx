@@ -34,7 +34,7 @@ export function AppShell() {
   const [rightCollapsed, setRightCollapsed] = useState(false)
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(false)
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false)
-  const [rightPanelWidth, setRightPanelWidth] = useState(280)
+  const [rightPanelWidth, setRightPanelWidth] = useState(340)
   const [leftPanelWidth, setLeftPanelWidth] = useState(290)
 
   const nodes: Node<SQLNodeData>[] = parseResult?.nodes ?? []
