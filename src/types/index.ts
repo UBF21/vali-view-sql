@@ -9,6 +9,7 @@ export type NodeType =
   | 'output' | 'sort' | 'limit' | 'subquery' | 'setop'
   | 'cte' | 'temp_table' | 'procedure' | 'param' | 'declare'
   | 'condition' | 'loop'
+  | 'merge' | 'pivot' | 'unpivot'
 
 export type AppMode = 'explain' | 'diff' | 'stepper'
 

@@ -22,6 +22,9 @@ export const NODE_COLORS: Record<NodeType, {
   declare:    { bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.33)', text: '#A78BFA', icon: '' },
   condition:  { bg: 'rgba(251,146,60,0.07)',  border: 'rgba(251,146,60,0.33)',  text: '#FB923C', icon: '' },
   loop:       { bg: 'rgba(251,113,133,0.07)', border: 'rgba(251,113,133,0.33)', text: '#FB7185', icon: '' },
+  merge:      { bg: 'rgba(20,184,166,0.07)',  border: 'rgba(20,184,166,0.33)',  text: '#14B8A6', icon: '' },
+  pivot:      { bg: 'rgba(139,92,246,0.07)',  border: 'rgba(139,92,246,0.33)',  text: '#8B5CF6', icon: '' },
+  unpivot:    { bg: 'rgba(236,72,153,0.07)',  border: 'rgba(236,72,153,0.33)',  text: '#EC4899', icon: '' },
 }
 
 // Resolved background for BaseNode — uses CSS vars so light/dark mode works correctly
@@ -42,6 +45,9 @@ export const NODE_BG: Record<NodeType, string> = {
   declare:    'rgba(167,139,250,0.07)',
   condition:  'rgba(251,146,60,0.07)',
   loop:       'rgba(251,113,133,0.07)',
+  merge:      'rgba(20,184,166,0.07)',
+  pivot:      'rgba(139,92,246,0.07)',
+  unpivot:    'rgba(236,72,153,0.07)',
 }
 
 // Diff coloring helpers
