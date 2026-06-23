@@ -46,6 +46,7 @@ export function DiffEditor() {
   const queryB = useAppStore((s) => s.queryB)
   const setQuery = useAppStore((s) => s.setQuery)
   const setQueryB = useAppStore((s) => s.setQueryB)
+  const dialect = useAppStore((s) => s.dialect)
 
   return (
     <div style={{ display: 'flex', gap: 4, height: '100%', overflow: 'hidden', padding: '4px 0' }}>
@@ -54,7 +55,7 @@ export function DiffEditor() {
           <span style={labelTextStyle}>Query</span>
           <span style={BADGE_A}>A</span>
         </div>
-        <QueryEditor value={query} onChange={setQuery} placeholder="SELECT ... (Query A)" style={{ flex: 1 }} />
+        <QueryEditor value={query} onChange={setQuery} dialect={dialect} placeholder="SELECT ... (Query A)" style={{ flex: 1 }} />
       </div>
       <DividerWithIcon />
       <div style={editorColStyle}>
@@ -62,7 +63,7 @@ export function DiffEditor() {
           <span style={labelTextStyle}>Query</span>
           <span style={BADGE_B}>B</span>
         </div>
-        <QueryEditor value={queryB} onChange={setQueryB} placeholder="SELECT ... (Query B)" style={{ flex: 1 }} />
+        <QueryEditor value={queryB} onChange={setQueryB} dialect={dialect} placeholder="SELECT ... (Query B)" style={{ flex: 1 }} />
       </div>
     </div>
   )

@@ -81,6 +81,7 @@ function SheetHeader({ onClose }: SheetHeaderProps) {
 export function MobileStepperLayout({ nodes, edges, stepAnimation, highlightClause }: MobileStepperLayoutProps) {
   const query    = useAppStore(s => s.query)
   const setQuery = useAppStore(s => s.setQuery)
+  const dialect  = useAppStore(s => s.dialect)
   const [editorOpen, setEditorOpen] = useState(false)
 
   const openEditor  = useCallback(() => setEditorOpen(true), [])
@@ -98,7 +99,7 @@ export function MobileStepperLayout({ nodes, edges, stepAnimation, highlightClau
       <MobileBottomSheet open={editorOpen} onClose={closeEditor} maxHeight="70vh">
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', padding: '8px 12px 12px' }}>
           <SheetHeader onClose={closeEditor} />
-          <QueryEditor value={query} onChange={setQuery} style={{ flex: 1 }} highlightClause={highlightClause} />
+          <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
         </div>
       </MobileBottomSheet>
     </div>

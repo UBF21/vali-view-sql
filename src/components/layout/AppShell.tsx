@@ -21,6 +21,7 @@ import { MobileStepperLayout } from '@/components/mobile/MobileStepperLayout'
 export function AppShell() {
   const query = useAppStore((s) => s.query)
   const setQuery = useAppStore((s) => s.setQuery)
+  const dialect = useAppStore((s) => s.dialect)
   const parseResult = useAppStore((s) => s.parseResult)
   const isLoading = useAppStore((s) => s.isLoading)
   const mode = useAppStore((s) => s.mode)
@@ -149,7 +150,7 @@ export function AppShell() {
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           SQL Query
         </div>
-        <QueryEditor value={query} onChange={setQuery} style={{ flex: 1 }} highlightClause={highlightClause} />
+        <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
       </div>
       {/* Diagram + stepper controls */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -224,7 +225,7 @@ export function AppShell() {
               <ExamplePicker />
             </div>
           </div>
-          <QueryEditor value={query} onChange={setQuery} style={{ flex: 1 }} highlightClause={highlightClause} />
+          <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
         </div>
 
         {/* Icon strip */}
@@ -296,7 +297,7 @@ export function AppShell() {
                 <HistoryPicker />
                 <ExamplePicker />
               </div>
-              <QueryEditor value={query} onChange={setQuery} style={{ flex: 1 }} highlightClause={highlightClause} />
+              <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
             </div>
           </div>
         </div>

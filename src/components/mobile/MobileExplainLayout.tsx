@@ -22,17 +22,18 @@ interface MobileExplainLayoutProps {
 interface EditorViewProps {
   query: string
   setQuery: (v: string) => void
+  dialect: import('@/types').Dialect
   highlightClause?: string
 }
 
-function EditorView({ query, setQuery, highlightClause }: EditorViewProps) {
+function EditorView({ query, setQuery, dialect, highlightClause }: EditorViewProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 12, gap: 8 }}>
       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
         <HistoryPicker />
         <ExamplePicker />
       </div>
-      <QueryEditor value={query} onChange={setQuery} style={{ flex: 1 }} highlightClause={highlightClause} />
+      <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
     </div>
   )
 }
@@ -58,13 +59,14 @@ function DiagramView({ nodes, edges }: DiagramViewProps) {
 export function MobileExplainLayout({ nodes, edges, highlightClause }: MobileExplainLayoutProps) {
   const query = useAppStore(s => s.query)
   const setQuery = useAppStore(s => s.setQuery)
+  const dialect = useAppStore(s => s.dialect)
 
   const views = useMemo(() => [
     {
       key: 'editor',
       label: 'Editor',
       icon: <Code2 size={13} />,
-      content: <EditorView query={query} setQuery={setQuery} highlightClause={highlightClause} />,
+      content: <EditorView query={query} setQuery={setQuery} dialect={dialect} highlightClause={highlightClause} />,
     },
     {
       key: 'diagram',
@@ -78,7 +80,7 @@ export function MobileExplainLayout({ nodes, edges, highlightClause }: MobileExp
       icon: <BookOpen size={13} />,
       content: <PanelRight />,
     },
-  ], [query, setQuery, nodes, edges, highlightClause])
+  ], [query, setQuery, dialect, nodes, edges, highlightClause])
 
   return <MobileSwipeLayout views={views} defaultIndex={1} />
 }

@@ -1,9 +1,13 @@
 import { useRef, useCallback, useMemo } from 'react'
 import type { CSSProperties } from 'react'
+import { AlignLeft } from 'lucide-react'
+import { formatSQL } from '@/lib/formatter/sql-formatter'
+import type { Dialect } from '@/types'
 
 interface QueryEditorProps {
   value: string
   onChange: (value: string) => void
+  dialect: Dialect
   placeholder?: string
   className?: string
   style?: CSSProperties
@@ -157,7 +161,7 @@ const SHARED: CSSProperties = {
   minHeight: '100%',
 }
 
-export function QueryEditor({ value, onChange, placeholder, className, style, highlightClause }: QueryEditorProps) {
+export function QueryEditor({ value, onChange, dialect, placeholder, className, style, highlightClause }: QueryEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLPreElement>(null)
 
@@ -181,7 +185,12 @@ export function QueryEditor({ value, onChange, placeholder, className, style, hi
       onChange(next)
       requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = start + 2 })
     }
-  }, [onChange])
+    // Shift+Alt+F → format
+    if (e.shiftKey && e.altKey && e.key === 'F') {
+      e.preventDefault()
+      onChange(formatSQL(value, dialect))
+    }
+  }, [onChange, value, dialect])
 
   const syncScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
     if (scrollRef.current) {
@@ -204,6 +213,23 @@ export function QueryEditor({ value, onChange, placeholder, className, style, hi
         ...style,
       }}
     >
+      {/* Format button */}
+      <button
+        onClick={() => onChange(formatSQL(value, dialect))}
+        aria-label="Format SQL (Shift+Alt+F)"
+        title="Format SQL (Shift+Alt+F)"
+        style={{
+          position: 'absolute', top: 6, right: 8, zIndex: 3,
+          background: 'var(--elevated)', border: '1px solid var(--border)',
+          borderRadius: 5, padding: '3px 6px', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 4,
+          fontSize: 10, color: 'var(--text-2)',
+        }}
+      >
+        <AlignLeft size={11} />
+        Format
+      </button>
+
       {/* Highlighted backdrop — carries all the visible colors */}
       <pre
         ref={scrollRef}

@@ -1,4 +1,5 @@
 import { format } from 'sql-formatter'
+import type { FormatOptionsWithLanguage } from 'sql-formatter'
 import type { Dialect } from '@/types'
 
 const DIALECT_MAP: Record<string, string> = {
@@ -11,7 +12,7 @@ const DIALECT_MAP: Record<string, string> = {
 export function formatSQL(sql: string, dialect: Dialect | string): string {
   try {
     return format(sql, {
-      language:    (DIALECT_MAP[dialect] ?? 'sql') as Parameters<typeof format>[1]['language'],
+      language:    (DIALECT_MAP[dialect] ?? 'sql') as FormatOptionsWithLanguage['language'],
       keywordCase: 'upper',
       indentStyle: 'standard',
       tabWidth:    2,
