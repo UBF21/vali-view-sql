@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check, ArrowLeftRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ConversionModal } from './ConversionModal'
 import { siPostgresql, siMysql } from 'simple-icons'
 import type { Dialect } from '@/types'
 
@@ -168,18 +169,12 @@ function useDropdown(ref: React.RefObject<HTMLDivElement | null>, onChange: (d: 
   return { open, setOpen, dropCoords, handleSelect }
 }
 
-// ── Public component ──────────────────────────────────────────────────────────
+// ── Sub-components (public area) ──────────────────────────────────────────────
 
-interface DialectSelectorProps {
-  value: Dialect
-  onChange: (dialect: Dialect) => void
-}
-
-export function DialectSelector({ value, onChange }: DialectSelectorProps) {
+function DialectPicker({ value, onChange }: { value: Dialect; onChange: (d: Dialect) => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const active = DIALECTS.find(d => d.value === value) ?? DIALECTS[0]
   const { open, setOpen, dropCoords, handleSelect } = useDropdown(ref, onChange)
-
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <DialectTrigger active={active} open={open} onClick={() => setOpen(v => !v)} />
@@ -189,6 +184,52 @@ export function DialectSelector({ value, onChange }: DialectSelectorProps) {
         </AnimatePresence>,
         document.body,
       )}
+    </div>
+  )
+}
+
+function ConvertButton({ value, query, onQueryChange, onChange }: {
+  value:          Dialect
+  query:          string
+  onQueryChange?: (q: string) => void
+  onChange:       (d: Dialect) => void
+}) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Convert SQL to another dialect"
+        title="Convert to another dialect"
+        style={{ background: 'var(--elevated)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-2)' }}
+      >
+        <ArrowLeftRight size={12} />
+      </button>
+      <ConversionModal
+        open={open}
+        fromDialect={value}
+        sourceSql={query}
+        onClose={() => setOpen(false)}
+        onApply={(sql, dialect) => { onQueryChange?.(sql); onChange(dialect) }}
+      />
+    </>
+  )
+}
+
+// ── Public component ──────────────────────────────────────────────────────────
+
+interface DialectSelectorProps {
+  value:          Dialect
+  onChange:       (dialect: Dialect) => void
+  query?:         string
+  onQueryChange?: (q: string) => void
+}
+
+export function DialectSelector({ value, onChange, query = '', onQueryChange }: DialectSelectorProps) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <DialectPicker value={value} onChange={onChange} />
+      <ConvertButton value={value} query={query} onQueryChange={onQueryChange} onChange={onChange} />
     </div>
   )
 }

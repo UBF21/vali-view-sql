@@ -1,0 +1,194 @@
+import { useState, useEffect } from 'react'
+import { X, ArrowRight, Copy, Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { convertDialect } from '@/lib/converter/dialect-converter'
+import type { ConversionChange } from '@/lib/converter/dialect-converter'
+import type { Dialect } from '@/types'
+import { DIALECTS } from './DialectSelector'
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+export interface ConversionModalProps {
+  open:        boolean
+  fromDialect: Dialect
+  sourceSql:   string
+  onClose:     () => void
+  onApply:     (sql: string, dialect: Dialect) => void
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function Backdrop({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      data-testid="conversion-modal-backdrop"
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 998 }}
+    />
+  )
+}
+
+function ModalHeader({ fromLabel, toDialect, targets, onToChange, onClose }: {
+  fromLabel:  string
+  toDialect:  Dialect
+  targets:    { value: Dialect; label: string }[]
+  onToChange: (d: Dialect) => void
+  onClose:    () => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid var(--border)', gap: 8 }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)', flex: 1 }}>Convert dialect</span>
+      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{fromLabel}</span>
+      <ArrowRight size={13} style={{ color: 'var(--text-3)' }} />
+      <select
+        value={toDialect}
+        onChange={e => onToChange(e.target.value as Dialect)}
+        style={{ fontSize: 12, padding: '3px 6px', borderRadius: 5, background: 'var(--elevated)', border: '1px solid var(--border)', color: 'var(--text-1)', cursor: 'pointer' }}
+      >
+        {targets.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+      </select>
+      <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 4 }}>
+        <X size={15} />
+      </button>
+    </div>
+  )
+}
+
+function ChangesSummary({ changes, toLabel }: { changes: ConversionChange[]; toLabel: string }) {
+  const containerStyle = { padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--elevated)' }
+  if (changes.length === 0) {
+    return (
+      <div style={containerStyle}>
+        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>No automatic conversions needed for {toLabel}.</div>
+      </div>
+    )
+  }
+  return (
+    <div style={containerStyle}>
+      <div style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 4 }}>
+        {changes.length} transformation{changes.length !== 1 ? 's' : ''} applied
+      </div>
+      {changes.slice(0, 5).map((c, i) => (
+        <div key={i} style={{ fontSize: 10, color: 'var(--text-2)' }}>• {c.rule}</div>
+      ))}
+      {changes.length > 5 && <div style={{ fontSize: 10, color: 'var(--text-3)' }}>+ {changes.length - 5} more</div>}
+    </div>
+  )
+}
+
+function SqlPreview({ sql }: { sql: string }) {
+  return (
+    <pre style={{
+      flex: 1, overflowY: 'auto', margin: 0, padding: '12px 16px',
+      fontSize: 12, fontFamily: 'monospace', color: 'var(--text-1)',
+      background: 'var(--surface)', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+    }}>
+      {sql}
+    </pre>
+  )
+}
+
+function ModalFooter({ copied, onCopy, onApply }: {
+  copied:  boolean
+  onCopy:  () => void
+  onApply: () => void
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
+      <button
+        onClick={onCopy}
+        style={{ padding: '6px 12px', borderRadius: 6, fontSize: 11, background: 'var(--elevated)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        {copied ? <Check size={12} /> : <Copy size={12} />}
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+      <button
+        onClick={onApply}
+        style={{ padding: '6px 14px', borderRadius: 6, fontSize: 11, background: 'var(--a)', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#000' }}
+      >
+        Use this query
+      </button>
+    </div>
+  )
+}
+
+// ── Hooks ──────────────────────────────────────────────────────────────────────
+
+function useTargetDialect(fromDialect: Dialect) {
+  const targets = DIALECTS.filter(d => d.value !== fromDialect)
+  const [toDialect, setToDialect] = useState<Dialect>(targets[0]?.value ?? 'mysql')
+
+  useEffect(() => {
+    const t = DIALECTS.filter(d => d.value !== fromDialect)
+    if (t[0]) setToDialect(t[0].value)
+  }, [fromDialect])
+
+  return { targets, toDialect, setToDialect }
+}
+
+function useCopy(text: string) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+  return { copied, handleCopy }
+}
+
+function useEscapeKey(open: boolean, onClose: () => void) {
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open, onClose])
+}
+
+// ── Modal panel ────────────────────────────────────────────────────────────────
+
+function ModalPanel({ fromDialect, sourceSql, onClose, onApply }: Omit<ConversionModalProps, 'open'>) {
+  const { targets, toDialect, setToDialect } = useTargetDialect(fromDialect)
+  const { convertedSQL, changes } = convertDialect(sourceSql, fromDialect, toDialect)
+  const { copied, handleCopy } = useCopy(convertedSQL)
+
+  const fromLabel = DIALECTS.find(d => d.value === fromDialect)?.label ?? fromDialect
+  const toLabel   = DIALECTS.find(d => d.value === toDialect)?.label   ?? toDialect
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      role="dialog" aria-modal="true" aria-label="Convert SQL dialect"
+      style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        zIndex: 999, background: 'var(--surface)', border: '1px solid var(--border-hi)',
+        borderRadius: 12, boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+        width: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+      }}
+    >
+      <ModalHeader fromLabel={fromLabel} toDialect={toDialect} targets={targets} onToChange={setToDialect} onClose={onClose} />
+      <ChangesSummary changes={changes} toLabel={toLabel} />
+      <SqlPreview sql={convertedSQL} />
+      <ModalFooter copied={copied} onCopy={handleCopy} onApply={() => { onApply(convertedSQL, toDialect); onClose() }} />
+    </motion.div>
+  )
+}
+
+// ── Public component ───────────────────────────────────────────────────────────
+
+export function ConversionModal({ open, fromDialect, sourceSql, onClose, onApply }: ConversionModalProps) {
+  useEscapeKey(open, onClose)
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <Backdrop onClose={onClose} />
+          <ModalPanel fromDialect={fromDialect} sourceSql={sourceSql} onClose={onClose} onApply={onApply} />
+        </>
+      )}
+    </AnimatePresence>
+  )
+}

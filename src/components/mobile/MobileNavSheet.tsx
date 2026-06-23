@@ -70,11 +70,11 @@ function ModeList({ mode, onSelect }: { mode: AppMode; onSelect: (m: AppMode) =>
   )
 }
 
-function DialectSection({ dialect, onChange }: { dialect: Dialect; onChange: (d: Dialect) => void }) {
+function DialectSection({ dialect, onChange, query, onQueryChange }: { dialect: Dialect; onChange: (d: Dialect) => void; query: string; onQueryChange: (q: string) => void }) {
   return (
     <div style={{ margin: '8px 16px 0', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
       <SectionLabel style={{ marginBottom: 8 }}>Dialect</SectionLabel>
-      <DialectSelector value={dialect} onChange={onChange} />
+      <DialectSelector value={dialect} onChange={onChange} query={query} onQueryChange={onQueryChange} />
     </div>
   )
 }
@@ -82,10 +82,12 @@ function DialectSection({ dialect, onChange }: { dialect: Dialect; onChange: (d:
 // ── Public component ──────────────────────────────────────────────────────────
 
 export function MobileNavSheet({ open, onClose }: MobileNavSheetProps) {
-  const mode    = useAppStore(s => s.mode)
-  const setMode = useAppStore(s => s.setMode)
+  const mode       = useAppStore(s => s.mode)
+  const setMode    = useAppStore(s => s.setMode)
   const dialect    = useAppStore(s => s.dialect)
   const setDialect = useAppStore(s => s.setDialect)
+  const query      = useAppStore(s => s.query)
+  const setQuery   = useAppStore(s => s.setQuery)
 
   const handleModeSelect = (m: AppMode) => { setMode(m); onClose() }
 
@@ -93,7 +95,7 @@ export function MobileNavSheet({ open, onClose }: MobileNavSheetProps) {
     <MobileBottomSheet open={open} onClose={onClose} maxHeight="60vh">
       <div style={{ padding: '4px 0 8px', overflowY: 'auto' }}>
         <ModeList mode={mode} onSelect={handleModeSelect} />
-        <DialectSection dialect={dialect} onChange={setDialect} />
+        <DialectSection dialect={dialect} onChange={setDialect} query={query} onQueryChange={setQuery} />
         <div style={{ height: 'env(safe-area-inset-bottom, 8px)' }} />
       </div>
     </MobileBottomSheet>

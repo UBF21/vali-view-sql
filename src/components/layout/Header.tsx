@@ -27,6 +27,8 @@ function useHeaderState() {
   const setTheme   = useAppStore((s) => s.setTheme)
   const dialect    = useAppStore((s) => s.dialect)
   const setDialect = useAppStore((s) => s.setDialect)
+  const query      = useAppStore((s) => s.query)
+  const setQuery   = useAppStore((s) => s.setQuery)
   const mode       = useAppStore((s) => s.mode)
   const setMode    = useAppStore((s) => s.setMode)
   const [toastVisible, setToastVisible] = useState(false)
@@ -43,7 +45,7 @@ function useHeaderState() {
       .catch(console.error)
   }, [])
 
-  return { theme, dialect, setDialect, mode, setMode,
+  return { theme, dialect, setDialect, query, setQuery, mode, setMode,
            toastVisible, setToastVisible, navOpen, setNavOpen,
            isMobile, toggleTheme, copyLink }
 }
@@ -122,10 +124,10 @@ function CopyLinkButton({ onClick }: { onClick: () => void }) {
   )
 }
 
-function DesktopActions({ dialect, setDialect, theme, onCopyLink, onToggle }: { dialect: Dialect; setDialect: (d: Dialect) => void; theme: string; onCopyLink: () => void; onToggle: () => void }) {
+function DesktopActions({ dialect, setDialect, query, setQuery, theme, onCopyLink, onToggle }: { dialect: Dialect; setDialect: (d: Dialect) => void; query: string; setQuery: (q: string) => void; theme: string; onCopyLink: () => void; onToggle: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-      <DialectSelector value={dialect} onChange={(d: Dialect) => setDialect(d)} />
+      <DialectSelector value={dialect} onChange={(d: Dialect) => setDialect(d)} query={query} onQueryChange={setQuery} />
       <CopyLinkButton onClick={onCopyLink} />
       <ThemeToggle theme={theme} onToggle={onToggle} />
     </div>
@@ -144,12 +146,12 @@ function MobileHeaderBar({ theme, onToggleTheme, onOpenNav }: { theme: string; o
   )
 }
 
-function DesktopHeaderBar({ mode, setMode, dialect, setDialect, theme, onCopyLink, onToggleTheme }: { mode: AppMode; setMode: (m: AppMode) => void; dialect: Dialect; setDialect: (d: Dialect) => void; theme: string; onCopyLink: () => void; onToggleTheme: () => void }) {
+function DesktopHeaderBar({ mode, setMode, dialect, setDialect, query, setQuery, theme, onCopyLink, onToggleTheme }: { mode: AppMode; setMode: (m: AppMode) => void; dialect: Dialect; setDialect: (d: Dialect) => void; query: string; setQuery: (q: string) => void; theme: string; onCopyLink: () => void; onToggleTheme: () => void }) {
   return (
     <header className="app-header" style={{ ...HEADER_STYLE, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', padding: '0 16px' }}>
       <Logo isMobile={false} />
       <ModeTabs mode={mode} setMode={setMode} />
-      <DesktopActions dialect={dialect} setDialect={setDialect} theme={theme} onCopyLink={onCopyLink} onToggle={onToggleTheme} />
+      <DesktopActions dialect={dialect} setDialect={setDialect} query={query} setQuery={setQuery} theme={theme} onCopyLink={onCopyLink} onToggle={onToggleTheme} />
     </header>
   )
 }
@@ -157,7 +159,7 @@ function DesktopHeaderBar({ mode, setMode, dialect, setDialect, theme, onCopyLin
 // ── Public component ───────────────────────────────────────────────────────────
 
 export function Header() {
-  const { theme, dialect, setDialect, mode, setMode,
+  const { theme, dialect, setDialect, query, setQuery, mode, setMode,
           toastVisible, setToastVisible, navOpen, setNavOpen,
           isMobile, toggleTheme, copyLink } = useHeaderState()
 
@@ -165,7 +167,7 @@ export function Header() {
     <>
       {isMobile
         ? <MobileHeaderBar theme={theme} onToggleTheme={toggleTheme} onOpenNav={() => setNavOpen(true)} />
-        : <DesktopHeaderBar mode={mode} setMode={setMode} dialect={dialect} setDialect={setDialect} theme={theme} onCopyLink={copyLink} onToggleTheme={toggleTheme} />
+        : <DesktopHeaderBar mode={mode} setMode={setMode} dialect={dialect} setDialect={setDialect} query={query} setQuery={setQuery} theme={theme} onCopyLink={copyLink} onToggleTheme={toggleTheme} />
       }
       {isMobile && <MobileNavSheet open={navOpen} onClose={() => setNavOpen(false)} />}
       <Toast message="Link copied! 🔗" visible={toastVisible} onHide={() => setToastVisible(false)} />
