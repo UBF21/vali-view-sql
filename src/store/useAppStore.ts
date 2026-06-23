@@ -6,6 +6,8 @@ import type { ColumnLineage } from '@/lib/lineage/column-lineage'
 import type { Collection } from '@/lib/collections/types'
 import { MAX_COLLECTIONS } from '@/lib/collections/types'
 import { createCollection, addQueryToCollection, migrateHistoryToCollections } from '@/lib/collections/helpers'
+import type { Schema } from '@/lib/schema/types'
+import { parseSchema } from '@/lib/schema/schema-parser'
 
 interface HistoryEntry {
   query: string
@@ -59,6 +61,10 @@ interface AppStore {
   addCollection:         (name: string, color?: string) => void
   removeCollection:      (collectionId: string) => void
   renameCollection:      (collectionId: string, newName: string) => void
+
+  schema:      Schema | null
+  loadSchema:  (ddl: string) => void
+  clearSchema: () => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -76,6 +82,9 @@ export const useAppStore = create<AppStore>()(
       parseError: null,
       history: [],
       collections: [],
+      schema: null,
+      loadSchema: (ddl) => set({ schema: parseSchema(ddl) }),
+      clearSchema: () => set({ schema: null }),
       infoNode: null,
       complexityResult: null,
       previousQuery: null,

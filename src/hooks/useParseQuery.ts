@@ -19,6 +19,7 @@ export function useParseQuery() {
   const setSuggestions = useAppStore((s) => s.setSuggestions)
   const setComplexityResult = useAppStore((s) => s.setComplexityResult)
   const setColumnLineage = useAppStore((s) => s.setColumnLineage)
+  const schema = useAppStore((s) => s.schema)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -45,7 +46,7 @@ export function useParseQuery() {
         setParseError(null)
 
         const issues = result.rawAst != null
-          ? runAnalyzers(result.rawAst, query, dialect)
+          ? runAnalyzers(result.rawAst, query, dialect, schema)
           : []
         setIssues(issues)
 
@@ -68,5 +69,5 @@ export function useParseQuery() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [query, dialect, setParseResult, setIsLoading, setParseError, addToHistory, setIssues, setSuggestions, setComplexityResult, setColumnLineage])
+  }, [query, dialect, schema, setParseResult, setIsLoading, setParseError, addToHistory, setIssues, setSuggestions, setComplexityResult, setColumnLineage])
 }

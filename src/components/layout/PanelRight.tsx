@@ -4,6 +4,7 @@ import { GlossaryPanel } from '@/components/panels/GlossaryPanel'
 import { IssuesPanel } from '@/components/panels/IssuesPanel'
 import { SuggestionsPanel } from '@/components/panels/SuggestionsPanel'
 import { LineagePanel } from '@/components/panels/LineagePanel'
+import { SchemaPanel } from '@/components/panels/SchemaPanel'
 
 export function PanelRight() {
   const issues = useAppStore((s) => s.issues)
@@ -60,6 +61,9 @@ export function PanelRight() {
           <TabsTrigger value="lineage" style={{ fontSize: 11, padding: '3px 10px' }}>
             Lineage
           </TabsTrigger>
+          <TabsTrigger value="schema" style={{ fontSize: 11, padding: '3px 10px' }}>
+            Schema
+          </TabsTrigger>
         </TabsList>
 
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
@@ -74,6 +78,9 @@ export function PanelRight() {
           </TabsContent>
           <TabsContent value="lineage" style={{ height: '100%', margin: 0, overflow: 'auto' }}>
             <LineagePanel />
+          </TabsContent>
+          <TabsContent value="schema" style={{ height: '100%', margin: 0, overflow: 'auto' }}>
+            <SchemaPanel />
           </TabsContent>
         </div>
       </Tabs>
