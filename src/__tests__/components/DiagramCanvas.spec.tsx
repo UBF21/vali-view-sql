@@ -15,8 +15,8 @@ vi.mock('@/hooks/useSQLParseAnim', () => ({
 }))
 
 vi.mock('@/store/useAppStore', () => ({
-  useAppStore: (sel: (s: { setInfoNode: () => void }) => unknown) =>
-    sel({ setInfoNode: vi.fn() }),
+  useAppStore: (sel: (s: { setInfoNode: () => void; complexityResult: null }) => unknown) =>
+    sel({ setInfoNode: vi.fn(), complexityResult: null }),
 }))
 
 vi.mock('@/components/diagram/NodeInfoPanel', () => ({ NodeInfoPanel: () => null }))

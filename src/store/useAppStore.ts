@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Dialect, AppMode, ParseResult, Issue, Suggestion, NodeType } from '@/types'
+import type { ComplexityResult } from '@/lib/complexity/complexity-score'
 
 interface HistoryEntry {
   query: string
@@ -28,6 +29,7 @@ interface AppStore {
   parseError: string | null
   history: HistoryEntry[]
   infoNode: InfoNodeData | null
+  complexityResult: ComplexityResult | null
 
   setDialect: (d: Dialect) => void
   setQuery: (q: string) => void
@@ -42,6 +44,7 @@ interface AppStore {
   addToHistory: (query: string, dialect: Dialect) => void
   clearHistory: () => void
   setInfoNode: (n: InfoNodeData | null) => void
+  setComplexityResult: (r: ComplexityResult | null) => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -59,6 +62,7 @@ export const useAppStore = create<AppStore>()(
       parseError: null,
       history: [],
       infoNode: null,
+      complexityResult: null,
 
       setDialect: (dialect) => set({ dialect }),
       setQuery: (query) => set({ query }),
@@ -79,6 +83,7 @@ export const useAppStore = create<AppStore>()(
         })),
       clearHistory: () => set({ history: [] }),
       setInfoNode: (infoNode) => set({ infoNode }),
+      setComplexityResult: (complexityResult) => set({ complexityResult }),
     }),
     {
       name: 'vali-viewsql-store',

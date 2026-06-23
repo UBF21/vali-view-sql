@@ -8,6 +8,7 @@ import {
 import '@xyflow/react/dist/style.css'
 import { customNodeTypes } from './nodes'
 import { NodeInfoPanel } from './NodeInfoPanel'
+import { ComplexityBadge } from './ComplexityBadge'
 import { useAppStore } from '@/store/useAppStore'
 import { useSQLParseAnim } from '@/hooks/useSQLParseAnim'
 import type { SQLNodeData } from '@/types'
@@ -50,6 +51,7 @@ function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, 
 
   return (
     <div ref={containerRef} className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <ComplexityBadge />
       <ReactFlow
         nodes={nodes} edges={edges} nodeTypes={customNodeTypes}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
