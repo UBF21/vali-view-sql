@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Dialect, AppMode, ParseResult, Issue, Suggestion, NodeType } from '@/types'
 import type { ComplexityResult } from '@/lib/complexity/complexity-score'
+import type { ColumnLineage } from '@/lib/lineage/column-lineage'
 
 interface HistoryEntry {
   query: string
@@ -31,6 +32,8 @@ interface AppStore {
   infoNode: InfoNodeData | null
   complexityResult: ComplexityResult | null
   previousQuery: string | null
+  columnLineage: ColumnLineage
+  setColumnLineage: (l: ColumnLineage) => void
 
   setDialect: (d: Dialect) => void
   setQuery: (q: string) => void
@@ -66,6 +69,8 @@ export const useAppStore = create<AppStore>()(
       infoNode: null,
       complexityResult: null,
       previousQuery: null,
+      columnLineage: [],
+      setColumnLineage: (columnLineage) => set({ columnLineage }),
 
       setDialect: (dialect) => set({ dialect }),
       setQuery: (query) => set((state) => ({ query, previousQuery: state.query })),

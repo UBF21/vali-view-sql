@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { GlossaryPanel } from '@/components/panels/GlossaryPanel'
 import { IssuesPanel } from '@/components/panels/IssuesPanel'
 import { SuggestionsPanel } from '@/components/panels/SuggestionsPanel'
+import { LineagePanel } from '@/components/panels/LineagePanel'
 
 export function PanelRight() {
   const issues = useAppStore((s) => s.issues)
@@ -56,6 +57,9 @@ export function PanelRight() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="lineage" style={{ fontSize: 11, padding: '3px 10px' }}>
+            Lineage
+          </TabsTrigger>
         </TabsList>
 
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
@@ -67,6 +71,9 @@ export function PanelRight() {
           </TabsContent>
           <TabsContent value="suggestions" style={{ height: '100%', margin: 0, overflow: 'auto' }}>
             <SuggestionsPanel />
+          </TabsContent>
+          <TabsContent value="lineage" style={{ height: '100%', margin: 0, overflow: 'auto' }}>
+            <LineagePanel />
           </TabsContent>
         </div>
       </Tabs>

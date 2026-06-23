@@ -4,6 +4,7 @@ import { parseSQLAsync } from '@/lib/parser'
 import { runAnalyzers } from '@/lib/analyzers'
 import { generateSuggestions } from '@/lib/optimizer/suggestions'
 import { computeComplexity } from '@/lib/complexity/complexity-score'
+import { extractColumnLineage } from '@/lib/lineage/column-lineage'
 
 const DEBOUNCE_MS = 800
 
@@ -17,6 +18,7 @@ export function useParseQuery() {
   const setIssues = useAppStore((s) => s.setIssues)
   const setSuggestions = useAppStore((s) => s.setSuggestions)
   const setComplexityResult = useAppStore((s) => s.setComplexityResult)
+  const setColumnLineage = useAppStore((s) => s.setColumnLineage)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -25,6 +27,7 @@ export function useParseQuery() {
       setParseResult(null)
       setParseError(null)
       setComplexityResult(null)
+      setColumnLineage([])
       setIsLoading(false)
       return
     }
@@ -38,6 +41,7 @@ export function useParseQuery() {
         const result = await parseSQLAsync(query, dialect)
         setParseResult(result)
         setComplexityResult(computeComplexity(result))
+        setColumnLineage(extractColumnLineage(result.rawAst))
         setParseError(null)
 
         const issues = result.rawAst != null
@@ -55,6 +59,7 @@ export function useParseQuery() {
         setParseError(err instanceof Error ? err.message : String(err))
         setParseResult(null)
         setComplexityResult(null)
+        setColumnLineage([])
       } finally {
         setIsLoading(false)
       }
@@ -63,5 +68,5 @@ export function useParseQuery() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [query, dialect, setParseResult, setIsLoading, setParseError, addToHistory, setIssues, setSuggestions, setComplexityResult])
+  }, [query, dialect, setParseResult, setIsLoading, setParseError, addToHistory, setIssues, setSuggestions, setComplexityResult, setColumnLineage])
 }
