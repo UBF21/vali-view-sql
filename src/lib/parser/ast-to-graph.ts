@@ -37,6 +37,8 @@ function astToGraphInner(
   if (stmt.type === 'update') return buildUpdateGraph(stmt, nextId)
   if (stmt.type === 'delete') return buildDeleteGraph(stmt, nextId)
   if (stmt.type === 'insert') return buildInsertGraph(stmt, _dialect, nextId)
+  if (stmt.type === 'merge') return buildMergeGraph(stmt, nextId)
+  if (stmt.type === 'pivot' || stmt.type === 'unpivot') return buildPivotGraph(stmt, nextId)
   if (stmt.type !== 'select') return { nodes, edges, glossary }
 
   // ── SET OPERATIONS (UNION / INTERSECT / EXCEPT) ───────────────────────────
@@ -552,6 +554,91 @@ function buildInsertGraph(
   ctx.edges.push(makeDataEdge(valId, tableId))
   ctx.glossary.push({ keyword: 'INSERT', role: 'DML', detail: 'Adds new rows to a table' })
   return { nodes: ctx.nodes, edges: ctx.edges, glossary: ctx.glossary }
+}
+
+// ─── MERGE builder ───────────────────────────────────────────────────────────
+
+function makeMergeNode(id: string, targetTable: string, sourceTable: string): Node<SQLNodeData> {
+  return {
+    id, type: 'mergeNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'merge' as const, label: `MERGE INTO ${targetTable}`, detail: `Using ${sourceTable}`, clause: 'MERGE' },
+  }
+}
+
+function addMergeParticipant(
+  table: string, role: 'USING' | 'INTO', mergeId: string,
+  nextId: (t: string) => string, ctx: DmlCtx,
+): void {
+  const id = nextId('table')
+  ctx.nodes.push({
+    id, type: 'tableNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'table', label: table, detail: `${role === 'USING' ? 'Source' : 'Target'} (${role} ${table})`, clause: `${role} ${table}` },
+  })
+  ctx.edges.push(makeDataEdge(id, mergeId))
+}
+
+interface WhenBranch { label: string; detail: string; clause: string }
+
+function addMergeWhenBranch(
+  branch: WhenBranch, mergeId: string,
+  nextId: (t: string) => string, ctx: DmlCtx,
+): void {
+  const id = nextId('filter')
+  ctx.nodes.push({
+    id, type: 'filterNode', position: { x: 0, y: 0 },
+    data: { nodeType: 'filter', label: branch.label, detail: branch.detail, clause: branch.clause },
+  })
+  ctx.edges.push(makeFilterEdge(mergeId, id))
+}
+
+function buildMergeGraph(stmt: Record<string, unknown>, nextId: (t: string) => string): GraphResult {
+  const ctx: DmlCtx = { nodes: [], edges: [], glossary: [], nextId }
+  const targetTable = (stmt.target as Record<string, unknown> | undefined)?.table as string ?? 'target'
+  const sourceTable = (stmt.using as Record<string, unknown> | undefined)?.table as string ?? 'source'
+
+  const mergeId = nextId('merge')
+  ctx.nodes.push(makeMergeNode(mergeId, targetTable, sourceTable))
+  ctx.glossary.push({ keyword: 'MERGE', role: 'DML', detail: 'Performs INSERT, UPDATE, or DELETE based on a join condition' })
+
+  addMergeParticipant(sourceTable, 'USING', mergeId, nextId, ctx)
+  addMergeParticipant(targetTable, 'INTO', mergeId, nextId, ctx)
+  addMergeWhenBranch({ label: 'WHEN MATCHED', detail: 'UPDATE or DELETE', clause: 'WHEN MATCHED THEN' }, mergeId, nextId, ctx)
+  addMergeWhenBranch({ label: 'WHEN NOT MATCHED', detail: 'INSERT', clause: 'WHEN NOT MATCHED THEN' }, mergeId, nextId, ctx)
+
+  return { nodes: ctx.nodes, edges: ctx.edges, glossary: ctx.glossary }
+}
+
+// ─── PIVOT / UNPIVOT builder ──────────────────────────────────────────────────
+
+function buildPivotGraph(stmt: Record<string, unknown>, nextId: (t: string) => string): GraphResult {
+  const nodes: Node<SQLNodeData>[] = []
+  const edges: Edge[] = []
+  const glossary: GlossaryEntry[] = []
+
+  const nodeType = stmt.type as 'pivot' | 'unpivot'
+  const opId = nextId(nodeType)
+  nodes.push({
+    id: opId,
+    type: `${nodeType}Node`,
+    position: { x: 0, y: 0 },
+    data: {
+      nodeType,
+      label: nodeType.toUpperCase(),
+      detail: nodeType === 'pivot'
+        ? 'Aggregates rows into columns'
+        : 'Expands columns into rows',
+      clause: nodeType.toUpperCase(),
+    },
+  })
+  glossary.push({
+    keyword: nodeType.toUpperCase(),
+    role: 'Transform',
+    detail: nodeType === 'pivot'
+      ? 'Rotates rows into columns using an aggregate function'
+      : 'Rotates columns into rows',
+  })
+
+  return { nodes, edges, glossary }
 }
 
 // ─── Edge factories ───────────────────────────────────────────────────────────
