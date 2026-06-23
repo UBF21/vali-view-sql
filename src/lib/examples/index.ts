@@ -394,6 +394,52 @@ WHERE total_spent  > 5000
 WHERE session_start < GETDATE()
   AND is_expired = 1`,
   },
+  {
+    id: 'sqlserver-merge',
+    title: 'MERGE (upsert)',
+    dialect: 'sqlserver',
+    category: 'basic',
+    description: 'SQL Server MERGE statement — upsert pattern',
+    sql: `MERGE INTO employees AS target
+USING new_employees AS source
+  ON target.employee_id = source.employee_id
+WHEN MATCHED THEN
+  UPDATE SET
+    target.name   = source.name,
+    target.salary = source.salary
+WHEN NOT MATCHED THEN
+  INSERT (employee_id, name, salary)
+  VALUES (source.employee_id, source.name, source.salary);`,
+  },
+  {
+    id: 'sqlserver-pivot',
+    title: 'PIVOT — columns from rows',
+    dialect: 'sqlserver',
+    category: 'aggregation',
+    description: 'SQL Server PIVOT — aggregate rows into columns',
+    sql: `SELECT department, [Jan], [Feb], [Mar]
+FROM (
+  SELECT department, month, sales
+  FROM sales_data
+) AS src
+PIVOT (
+  SUM(sales)
+  FOR month IN ([Jan], [Feb], [Mar])
+) AS pvt
+ORDER BY department`,
+  },
+  {
+    id: 'sqlserver-unpivot',
+    title: 'UNPIVOT — rows from columns',
+    dialect: 'sqlserver',
+    category: 'basic',
+    description: 'SQL Server UNPIVOT — expand column values into rows',
+    sql: `SELECT employee_id, quarter, sales
+FROM quarterly_sales
+UNPIVOT (
+  sales FOR quarter IN (Q1, Q2, Q3, Q4)
+) AS unpvt`,
+  },
 
   // ────── SQLite (3) ──────
   {
