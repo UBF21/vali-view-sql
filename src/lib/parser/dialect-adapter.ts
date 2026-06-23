@@ -39,9 +39,16 @@ function adaptMySQL(sql: string): string {
     .replace(/\bSQL_CALC_FOUND_ROWS\b/gi, '')
 }
 
+function adaptSQLite(sql: string): string {
+  return sql
+    .replace(/\bAUTOINCREMENT\b/gi, '')
+    .replace(/\|\|/g, '||')
+}
+
 export function dialectAdapter(sql: string, dialect: Dialect): string {
   if (dialect === 'postgresql') return adaptPostgres(sql)
   if (dialect === 'sqlserver') return adaptSqlServer(sql)
   if (dialect === 'mysql') return adaptMySQL(sql)
+  if (dialect === 'sqlite') return adaptSQLite(sql)
   return sql
 }

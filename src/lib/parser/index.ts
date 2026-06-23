@@ -8,6 +8,13 @@ import type { Node } from '@xyflow/react'
 
 const parser = new Parser()
 
+const DB_MAP: Record<string, string> = {
+  postgresql: 'PostgreSQL',
+  mysql:      'MySQL',
+  sqlserver:  'TransactSQL',
+  sqlite:     'SQLite',
+}
+
 // Known constructs that can't be visualized — return friendly label
 const UNSUPPORTED: Array<[RegExp, string]> = [
   [/\bMERGE\b/i,                     'MERGE statements are not yet visualized.'],
@@ -66,9 +73,11 @@ export function parseSQL(sql: string, dialect: Dialect): ParseResult {
 
   const normalizedSql = dialectAdapter(sql, dialect)
 
+  const dbOption = { database: DB_MAP[dialect] ?? 'MySQL' }
+
   let ast: unknown
   try {
-    ast = parser.astify(normalizedSql)
+    ast = parser.astify(normalizedSql, dbOption)
   } catch (err) {
     const multiAst = tryMultiStatement(normalizedSql)
     if (multiAst) {

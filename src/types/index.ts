@@ -2,7 +2,7 @@ import type { Node, Edge } from '@xyflow/react'
 
 export type { Node, Edge }
 
-export type Dialect = 'postgresql' | 'mysql' | 'sqlserver'
+export type Dialect = 'postgresql' | 'mysql' | 'sqlserver' | 'sqlite'
 
 export type NodeType =
   | 'table' | 'join' | 'filter' | 'aggregate'

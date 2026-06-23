@@ -8,6 +8,7 @@ const DIALECT_LABEL: Record<Dialect, string> = {
   postgresql: 'PostgreSQL',
   mysql: 'MySQL',
   sqlserver: 'SQL Server',
+  sqlite: 'SQLite',
 }
 
 function useDropdownClose(ref: React.RefObject<HTMLDivElement | null>, open: boolean, onClose: () => void) {
