@@ -32,3 +32,20 @@ describe('detectDialectIssues — MySQL FULL OUTER JOIN', () => {
     expect(issues.find(i => i.title.includes('FULL OUTER JOIN'))?.severity).toBe('error')
   })
 })
+
+describe('SQLite dialect rules', () => {
+  it('flags FULL OUTER JOIN as error', () => {
+    const issues = detectDialectIssues({}, 'SELECT a FROM t1 FULL OUTER JOIN t2 ON t1.id = t2.id', 'sqlite')
+    expect(issues.some(i => i.severity === 'error' && i.title.toLowerCase().includes('full outer'))).toBe(true)
+  })
+
+  it('flags RIGHT JOIN as warning', () => {
+    const issues = detectDialectIssues({}, 'SELECT a FROM t1 RIGHT JOIN t2 ON t1.id = t2.id', 'sqlite')
+    expect(issues.some(i => i.severity === 'warning' && i.title.toLowerCase().includes('right join'))).toBe(true)
+  })
+
+  it('flags TRUNCATE TABLE as error', () => {
+    const issues = detectDialectIssues({}, 'TRUNCATE TABLE users', 'sqlite')
+    expect(issues.some(i => i.severity === 'error' && i.title.toLowerCase().includes('truncate'))).toBe(true)
+  })
+})

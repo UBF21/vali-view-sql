@@ -87,5 +87,51 @@ export function detectDialectIssues(ast: any, sql: string, dialect: Dialect): Is
     }
   }
 
+  if (dialect === 'sqlite') issues.push(...detectSQLiteIssues(sql))
+
   return issues
+}
+
+function sqliteFullOuterJoinIssue(sql: string): Issue | null {
+  if (!/\bFULL\s+OUTER\s+JOIN\b/i.test(sql)) return null
+  return {
+    id: 'sqlite-no-full-outer-join',
+    severity: 'error',
+    title: 'FULL OUTER JOIN not supported in SQLite',
+    description: 'SQLite does not support FULL OUTER JOIN. Emulate with LEFT JOIN + UNION.',
+    suggestion: 'Use SELECT * FROM a LEFT JOIN b ON ... UNION SELECT * FROM a RIGHT JOIN b ON ...',
+    dialectNote: 'SQLite',
+  }
+}
+
+function sqliteRightJoinIssue(sql: string): Issue | null {
+  if (!/\bRIGHT\s+JOIN\b/i.test(sql)) return null
+  return {
+    id: 'sqlite-no-right-join',
+    severity: 'warning',
+    title: 'RIGHT JOIN not natively supported in SQLite',
+    description: 'SQLite emulates RIGHT JOIN by swapping tables and using LEFT JOIN internally.',
+    suggestion: 'Rewrite as LEFT JOIN by swapping the table order.',
+    dialectNote: 'SQLite',
+  }
+}
+
+function sqliteTruncateIssue(sql: string): Issue | null {
+  if (!/\bTRUNCATE\s+TABLE\b/i.test(sql)) return null
+  return {
+    id: 'sqlite-no-truncate',
+    severity: 'error',
+    title: 'TRUNCATE TABLE not supported in SQLite',
+    description: 'SQLite has no TRUNCATE statement. Use DELETE FROM to remove all rows.',
+    suggestion: 'DELETE FROM table_name;',
+    dialectNote: 'SQLite',
+  }
+}
+
+function detectSQLiteIssues(sql: string): Issue[] {
+  return [
+    sqliteFullOuterJoinIssue(sql),
+    sqliteRightJoinIssue(sql),
+    sqliteTruncateIssue(sql),
+  ].filter((i): i is Issue => i !== null)
 }
