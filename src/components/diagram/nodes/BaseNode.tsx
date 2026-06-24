@@ -199,12 +199,14 @@ function NodeBody({ detail }: { detail: string }) {
 export const BaseNodeCard = memo(function BaseNodeCard({
   nodeType, label, detail, clause, accentColor, textColor, bgColor, isActive, selected, children, diffStatus,
 }: BaseNodeCardProps) {
-  const setInfoNode = useAppStore((s) => s.setInfoNode)
+  const setInfoNode       = useAppStore((s) => s.setInfoNode)
+  const setHighlightClause = useAppStore((s) => s.setHighlightClause)
 
   const handleInfoBtn = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     setInfoNode({ nodeType, label, detail: detail ?? '', clause })
-  }, [setInfoNode, nodeType, label, detail, clause])
+    if (clause) setHighlightClause(clause)
+  }, [setInfoNode, setHighlightClause, nodeType, label, detail, clause])
 
   return (
     <div className={nodeClassNames(isActive, selected)}

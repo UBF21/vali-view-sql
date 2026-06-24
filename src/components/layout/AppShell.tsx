@@ -27,10 +27,8 @@ export function AppShell() {
   const parseResult = useAppStore((s) => s.parseResult)
   const isLoading = useAppStore((s) => s.isLoading)
   const mode = useAppStore((s) => s.mode)
-  const issues = useAppStore((s) => s.issues)
-  const infoNode = useAppStore((s) => s.infoNode)
-
-  const highlightClause = infoNode?.clause
+  const issues          = useAppStore((s) => s.issues)
+  const highlightClause = useAppStore((s) => s.highlightClause)
 
   const pendingSnippet      = useAppStore(s => s.pendingSnippet)
   const clearPendingSnippet = useAppStore(s => s.clearPendingSnippet)

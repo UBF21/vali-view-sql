@@ -3,11 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { BaseNodeCard } from '@/components/diagram/nodes/BaseNode'
 
-const mockSetInfoNode = vi.fn()
+const mockSetInfoNode        = vi.fn()
+const mockSetHighlightClause = vi.fn()
 
 vi.mock('@/store/useAppStore', () => ({
-  useAppStore: (sel: (s: { setInfoNode: typeof mockSetInfoNode }) => unknown) =>
-    sel({ setInfoNode: mockSetInfoNode }),
+  useAppStore: (sel: (s: { setInfoNode: typeof mockSetInfoNode; setHighlightClause: typeof mockSetHighlightClause }) => unknown) =>
+    sel({ setInfoNode: mockSetInfoNode, setHighlightClause: mockSetHighlightClause }),
 }))
 
 const BASE_PROPS = {
@@ -21,7 +22,7 @@ const BASE_PROPS = {
   borderColor: '#C8880A',
 }
 
-beforeEach(() => { mockSetInfoNode.mockClear() })
+beforeEach(() => { mockSetInfoNode.mockClear(); mockSetHighlightClause.mockClear() })
 
 describe('BaseNodeCard', () => {
   it('renders label and detail', () => {
@@ -41,13 +42,19 @@ describe('BaseNodeCard', () => {
     })
   })
 
+  it('calls setHighlightClause when info button is clicked', () => {
+    render(<BaseNodeCard {...BASE_PROPS} />)
+    fireEvent.click(screen.getByRole('button', { name: /show node info/i }))
+    expect(mockSetHighlightClause).toHaveBeenCalledWith('FROM users')
+  })
+
   it('does NOT call setInfoNode when card body is clicked', () => {
     const { container } = render(<BaseNodeCard {...BASE_PROPS} />)
     fireEvent.click(container.firstChild as Element)
     expect(mockSetInfoNode).not.toHaveBeenCalled()
   })
 
-  it('calls setInfoNode when info button is clicked', () => {
+  it('calls setInfoNode exactly once per info button click', () => {
     render(<BaseNodeCard {...BASE_PROPS} />)
     fireEvent.click(screen.getByRole('button', { name: /show node info/i }))
     expect(mockSetInfoNode).toHaveBeenCalledTimes(1)

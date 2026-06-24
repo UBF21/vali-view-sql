@@ -65,10 +65,10 @@ function ZoomBridge() {
 }
 
 function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, className }: FlowCanvasProps) {
-  const setInfoNode = useAppStore((s) => s.setInfoNode)
+  const setHighlightClause = useAppStore((s) => s.setHighlightClause)
   const handleNodeClick = useCallback<NodeMouseHandler<Node<SQLNodeData>>>((_evt, node) => {
-    setInfoNode({ nodeType: node.data.nodeType, label: node.data.label, detail: node.data.detail ?? '', clause: node.data.clause })
-  }, [setInfoNode])
+    setHighlightClause(node.data.clause ?? null)
+  }, [setHighlightClause])
 
   return (
     <div ref={containerRef} className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -76,7 +76,8 @@ function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, 
       <ReactFlow
         nodes={nodes} edges={edges} nodeTypes={customNodeTypes} edgeTypes={EDGE_TYPES}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick} fitView fitViewOptions={{ padding: 0.2 }}
+        onNodeClick={handleNodeClick} onPaneClick={() => setHighlightClause(null)}
+        fitView fitViewOptions={{ padding: 0.2 }}
         minZoom={0.3} maxZoom={2} proOptions={{ hideAttribution: true }}
         style={FLOW_STYLE}
       >

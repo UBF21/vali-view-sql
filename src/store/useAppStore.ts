@@ -35,6 +35,7 @@ interface AppStore {
   parseError: string | null
   history: HistoryEntry[]
   infoNode: InfoNodeData | null
+  highlightClause: string | null
   complexityResult: ComplexityResult | null
   previousQuery: string | null
   columnLineage: ColumnLineage
@@ -54,6 +55,7 @@ interface AppStore {
   addToHistory: (query: string, dialect: Dialect) => void
   clearHistory: () => void
   setInfoNode: (n: InfoNodeData | null) => void
+  setHighlightClause: (clause: string | null) => void
   setComplexityResult: (r: ComplexityResult | null) => void
 
   collections:           Collection[]
@@ -93,6 +95,7 @@ export const useAppStore = create<AppStore>()(
       loadSchema: (ddl) => set({ schema: parseSchema(ddl) }),
       clearSchema: () => set({ schema: null }),
       infoNode: null,
+      highlightClause: null,
       complexityResult: null,
       previousQuery: null,
       columnLineage: [],
@@ -150,6 +153,7 @@ export const useAppStore = create<AppStore>()(
         })),
 
       setInfoNode: (infoNode) => set({ infoNode }),
+      setHighlightClause: (highlightClause) => set({ highlightClause }),
       setComplexityResult: (complexityResult) => set({ complexityResult }),
 
       zoomControls: null,
