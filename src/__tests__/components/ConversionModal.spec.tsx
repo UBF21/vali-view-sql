@@ -35,6 +35,12 @@ function renderModal(props: Partial<React.ComponentProps<typeof ConversionModal>
   )
 }
 
+/** Opens the dialect dropdown and clicks the option with the given label */
+function selectDialect(label: RegExp | string) {
+  fireEvent.click(screen.getByTestId('dialect-select-trigger'))
+  fireEvent.click(screen.getByRole('option', { name: label }))
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } })
@@ -66,11 +72,12 @@ describe('ConversionModal — header', () => {
     expect(screen.getByText('PostgreSQL')).toBeDefined()
   })
 
-  it('target select excludes source dialect', () => {
+  it('target dropdown trigger excludes source dialect', () => {
     renderModal({ fromDialect: 'postgresql' })
-    const select = screen.getByRole('combobox') as HTMLSelectElement
-    const options = Array.from(select.options).map(o => o.value)
-    expect(options).not.toContain('postgresql')
+    fireEvent.click(screen.getByTestId('dialect-select-trigger'))
+    const options = screen.getAllByRole('option')
+    const values = options.map(o => o.getAttribute('data-value'))
+    expect(values).not.toContain('postgresql')
     expect(options.length).toBe(3)
   })
 
@@ -109,19 +116,15 @@ describe('ConversionModal — Escape key', () => {
 
 describe('ConversionModal — changes summary', () => {
   it('shows "no conversions" message when same dialect semantics apply', () => {
-    // sqlite → postgresql has no rules for plain SELECT
+    // sqlite → postgresql (default first target) has no rules for plain SELECT
     renderModal({ fromDialect: 'sqlite', sourceSql: 'SELECT 1' })
-    // change target to postgresql
-    const select = screen.getByRole('combobox') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'postgresql' } })
     expect(screen.getByText(/no conversions needed/i)).toBeDefined()
   })
 
   it('shows transformation count when conversions applied', () => {
     // postgresql → sqlserver: LIMIT converts to TOP
     renderModal({ fromDialect: 'postgresql', sourceSql: 'SELECT * FROM t LIMIT 5' })
-    const select = screen.getByRole('combobox') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'sqlserver' } })
+    selectDialect(/sql server/i)
     expect(screen.getByText(/transformation/i)).toBeDefined()
   })
 })
@@ -141,8 +144,7 @@ describe('ConversionModal — footer actions', () => {
 
   it('"Use this query" calls onApply with converted SQL and target dialect', () => {
     renderModal({ fromDialect: 'postgresql', sourceSql: 'SELECT 1' })
-    const select = screen.getByRole('combobox') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'mysql' } })
+    selectDialect(/mysql/i)
     fireEvent.click(screen.getByRole('button', { name: /use this query/i }))
     expect(onApply).toHaveBeenCalledWith('SELECT 1', 'mysql')
   })
@@ -155,11 +157,9 @@ describe('ConversionModal — footer actions', () => {
 })
 
 describe('ConversionModal — target dialect select', () => {
-  it('changing select updates rendered SQL', () => {
+  it('changing dialect updates rendered SQL', () => {
     renderModal({ fromDialect: 'sqlserver', sourceSql: 'SELECT TOP 5 * FROM t' })
-    const select = screen.getByRole('combobox') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'postgresql' } })
-    // MSSQL→PG: SELECT TOP 5 → LIMIT 5
+    selectDialect(/postgresql/i)
     const pre = document.querySelector('pre') as HTMLElement
     expect(pre.textContent).toMatch(/LIMIT 5/)
   })
