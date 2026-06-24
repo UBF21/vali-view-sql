@@ -231,7 +231,7 @@ export function AppShell() {
               <ExamplePicker />
             </div>
           </div>
-          <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} pendingSnippet={pendingSnippet} clearPendingSnippet={clearPendingSnippet} />
+          <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} pendingSnippet={pendingSnippet} clearPendingSnippet={clearPendingSnippet} issues={issues} />
         </div>
 
         {/* Icon strip */}

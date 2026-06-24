@@ -56,6 +56,7 @@ export interface Issue {
   nodeId?: string
   dialectNote?: string
   docUrl?: string
+  line?: number
 }
 
 export interface Suggestion {
