@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, ArrowRight, Copy, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { convertDialect } from '@/lib/converter/dialect-converter'
@@ -100,7 +100,9 @@ function ModalFooter({ copied, onCopy, onApply }: {
         style={{ padding: '6px 12px', borderRadius: 6, fontSize: 11, background: 'var(--elevated)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 4 }}
       >
         {copied ? <Check size={12} /> : <Copy size={12} />}
-        {copied ? 'Copied!' : 'Copy'}
+        <span role="status" aria-live="polite" aria-atomic="true">
+          {copied ? 'Copied!' : 'Copy'}
+        </span>
       </button>
       <button
         onClick={onApply}
@@ -151,12 +153,17 @@ function ModalPanel({ fromDialect, sourceSql, onClose, onApply }: Omit<Conversio
   const { targets, toDialect, setToDialect } = useTargetDialect(fromDialect)
   const { convertedSQL, changes } = convertDialect(sourceSql, fromDialect, toDialect)
   const { copied, handleCopy } = useCopy(convertedSQL)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { panelRef.current?.focus() }, [])
 
   const fromLabel = DIALECTS.find(d => d.value === fromDialect)?.label ?? fromDialect
   const toLabel   = DIALECTS.find(d => d.value === toDialect)?.label   ?? toDialect
 
   return (
     <motion.div
+      ref={panelRef}
+      tabIndex={-1}
       initial={{ opacity: 0, scale: 0.95, y: -10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -167,6 +174,7 @@ function ModalPanel({ fromDialect, sourceSql, onClose, onApply }: Omit<Conversio
         zIndex: 999, background: 'var(--surface)', border: '1px solid var(--border-hi)',
         borderRadius: 12, boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
         width: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        outline: 'none',
       }}
     >
       <ModalHeader fromLabel={fromLabel} toDialect={toDialect} targets={targets} onToChange={setToDialect} onClose={onClose} />
