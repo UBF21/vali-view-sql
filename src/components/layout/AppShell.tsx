@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
-import { Code2, AlertTriangle, BookOpen, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, X, LayoutGrid } from 'lucide-react'
+import { Code2, AlertTriangle, BookOpen, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, X, LayoutGrid, Loader2 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { Header } from './Header'
 import { QueryEditor } from '@/components/editor/QueryEditor'
@@ -244,12 +244,16 @@ export function AppShell() {
 
       {/* CENTER — CANVAS */}
       <div style={{ overflow: 'hidden', position: 'relative', minWidth: 0 }}>
-        {nodes.length === 0 && !isLoading && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: 8, opacity: 0.4,
+        {isLoading && nodes.length === 0 && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 1,
+          }}>
+            <Loader2 size={28} className="spin" style={{ color: 'var(--text-2)', opacity: 0.5 }} />
+          </div>
+        )}
+        {!isLoading && nodes.length === 0 && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.4,
             pointerEvents: 'none', zIndex: 1,
           }}>
             <LayoutGrid size={36} style={{ opacity: 0.4, color: 'var(--text-2)' }} />

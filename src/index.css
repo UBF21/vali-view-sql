@@ -647,3 +647,11 @@ mark.sq-clause-highlight {
     display: flex !important;
   }
 }
+
+/* ── Spinner ──────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
