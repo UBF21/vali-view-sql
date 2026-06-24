@@ -42,7 +42,7 @@ function OnPill({ onCondition }: { onCondition: string }) {
   const [hovered, setHovered] = useState(false)
   return (
     <div
-      style={{ pointerEvents: 'all', zIndex: 10 }}
+      style={{ pointerEvents: 'all', zIndex: 10, position: 'relative' }}
       className="nodrag nopan"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -71,6 +71,7 @@ export function LabeledJoinEdge({
       <EdgeLabelRenderer>
         <div style={{
           position: 'absolute',
+          display: 'inline-block',
           transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
         }}>
           <OnPill onCondition={onCondition} />
