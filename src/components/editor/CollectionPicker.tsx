@@ -4,6 +4,7 @@ import { BookMarked, Search, Trash2 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { SaveQueryForm } from './SaveQueryForm'
 import { DIALECTS } from './DialectSelector'
+import { computeDropdownRect, type DropdownRect } from '@/lib/responsive/dropdown-rect'
 
 const DIALECT_META = Object.fromEntries(DIALECTS.map(d => [d.value, d]))
 
@@ -123,11 +124,11 @@ function usePickerState() {
   const [open, setOpen]         = useState(false)
   const [showSave, setShowSave] = useState(false)
   const [search, setSearch]     = useState('')
-  const [rect, setRect]         = useState<DOMRect | null>(null)
+  const [pos, setPos]           = useState<DropdownRect | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
   const toggle = useCallback(() => {
-    if (!open && btnRef.current) setRect(btnRef.current.getBoundingClientRect())
+    if (!open && btnRef.current) setPos(computeDropdownRect(btnRef.current.getBoundingClientRect(), 320, 400))
     setOpen(v => !v)
   }, [open])
 
@@ -140,7 +141,7 @@ function usePickerState() {
     return () => document.removeEventListener('mousedown', close)
   }, [open])
 
-  return { open, setOpen, showSave, setShowSave, search, setSearch, rect, btnRef, toggle }
+  return { open, setOpen, showSave, setShowSave, search, setSearch, pos, btnRef, toggle }
 }
 
 // ── Public component ──────────────────────────────────────────────────────────
@@ -150,7 +151,7 @@ export function CollectionPicker() {
   const setQuery         = useAppStore((s) => s.setQuery)
   const setDialect       = useAppStore((s) => s.setDialect)
   const removeCollection = useAppStore((s) => s.removeCollection)
-  const { open, setOpen, showSave, setShowSave, search, setSearch, rect, btnRef, toggle } = usePickerState()
+  const { open, setOpen, showSave, setShowSave, search, setSearch, pos, btnRef, toggle } = usePickerState()
 
   const totalQueries = collections.reduce((sum, c) => sum + c.queries.length, 0)
   const filtered = search.trim()
@@ -165,8 +166,8 @@ export function CollectionPicker() {
         style={{ background: 'var(--elevated)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 11, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 5 }}>
         <BookMarked size={13} />{totalQueries}
       </button>
-      {open && rect && createPortal(
-        <div style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: 320, maxHeight: 400, background: 'var(--surface)', border: '1px solid var(--border-hi)', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.28)', zIndex: 9999, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {open && pos && createPortal(
+        <div style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, maxHeight: pos.maxHeight, background: 'var(--surface)', border: '1px solid var(--border-hi)', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.28)', zIndex: 9999, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {showSave
             ? <SaveQueryForm onClose={() => setShowSave(false)} />
             : <><DropdownSearch search={search} onChange={setSearch} onShowSave={() => setShowSave(true)} /><DropdownList filtered={filtered} search={search} hasCollections={collections.length > 0} onSelect={handleSelect} onDelete={removeCollection} /></>

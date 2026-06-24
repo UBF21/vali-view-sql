@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { Code2, ChevronDown } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { SNIPPETS } from '@/lib/snippets'
+import { computeDropdownRect, type DropdownRect } from '@/lib/responsive/dropdown-rect'
 
 function useDropdownClose(ref: React.RefObject<HTMLDivElement | null>, open: boolean, onClose: () => void) {
   useEffect(() => {
@@ -17,7 +18,7 @@ function useDropdownClose(ref: React.RefObject<HTMLDivElement | null>, open: boo
 function useSnippetPicker() {
   const setPendingSnippet = useAppStore(s => s.setPendingSnippet)
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [pos, setPos] = useState<DropdownRect>({ top: 0, left: 0, width: 260, maxHeight: 340 })
   const ref = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
@@ -26,8 +27,7 @@ function useSnippetPicker() {
 
   const handleOpen = useCallback(() => {
     if (btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + 4, left: r.left })
+      setPos(computeDropdownRect(btnRef.current.getBoundingClientRect(), 260, 340))
     }
     setOpen(v => !v)
   }, [])
@@ -53,10 +53,10 @@ function SnippetItem({ title, description, onClick }: { title: string; descripti
   )
 }
 
-function Dropdown({ pos, onPick }: { pos: { top: number; left: number }; onPick: (sql: string) => void }) {
+function Dropdown({ pos, onPick }: { pos: DropdownRect; onPick: (sql: string) => void }) {
   return (
     <div style={{
-      position: 'fixed', top: pos.top, left: pos.left, width: 260, maxHeight: 340,
+      position: 'fixed', top: pos.top, left: pos.left, width: pos.width, maxHeight: pos.maxHeight,
       overflowY: 'auto', background: 'var(--surface)',
       border: '1px solid var(--border)', borderRadius: 8,
       boxShadow: '0 8px 32px rgba(0,0,0,.5)', zIndex: 9999,

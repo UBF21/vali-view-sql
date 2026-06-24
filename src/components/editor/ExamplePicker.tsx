@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { EXAMPLES } from '@/lib/examples'
 import type { Dialect } from '@/types'
+import { computeDropdownRect, type DropdownRect } from '@/lib/responsive/dropdown-rect'
 
 const DIALECT_LABEL: Record<Dialect, string> = {
   postgresql: 'PostgreSQL',
@@ -53,10 +54,10 @@ function DropdownList({ dialect, onPick }: { dialect: Dialect; onPick: (sql: str
   )
 }
 
-function Dropdown({ pos, dialect, onPick }: { pos: { top: number; left: number }; dialect: Dialect; onPick: (sql: string) => void }) {
+function Dropdown({ pos, dialect, onPick }: { pos: DropdownRect; dialect: Dialect; onPick: (sql: string) => void }) {
   return (
     <div style={{
-      position: 'fixed', top: pos.top, left: pos.left, width: 300, maxHeight: 380,
+      position: 'fixed', top: pos.top, left: pos.left, width: pos.width, maxHeight: pos.maxHeight,
       overflowY: 'auto', background: 'var(--surface, var(--bg-surface))',
       border: '1px solid var(--border)', borderRadius: 8,
       boxShadow: '0 8px 32px rgba(0,0,0,.5)', zIndex: 9999,
@@ -72,15 +73,14 @@ export function ExamplePicker() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [pos, setPos] = useState<DropdownRect>({ top: 0, left: 0, width: 300, maxHeight: 380 })
 
   const close = useCallback(() => setOpen(false), [])
   useDropdownClose(ref, open, close)
 
   const handleOpen = () => {
     if (btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + 4, left: r.left })
+      setPos(computeDropdownRect(btnRef.current.getBoundingClientRect(), 300, 380))
     }
     setOpen(v => !v)
   }
