@@ -29,6 +29,7 @@ const TOOLTIP_STYLE: React.CSSProperties = {
   fontFamily: 'monospace',
   boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
   zIndex: 100,
+  width: 'max-content',
   maxWidth: 280,
   whiteSpace: 'normal',
   wordBreak: 'break-word',
