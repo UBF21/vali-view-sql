@@ -49,11 +49,17 @@ const EDGE_TYPES = { 'labeled-join': LabeledJoinEdge }
 function ZoomBridge() {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const setZoomControls = useAppStore(s => s.setZoomControls)
+  const fnsRef = useRef<{ zoomIn: typeof zoomIn; zoomOut: typeof zoomOut; fitView: typeof fitView }>({ zoomIn, zoomOut, fitView })
+  fnsRef.current = { zoomIn, zoomOut, fitView }
 
   useEffect(() => {
-    setZoomControls({ zoomIn, zoomOut, fitView })
+    setZoomControls({
+      zoomIn: () => fnsRef.current.zoomIn(),
+      zoomOut: () => fnsRef.current.zoomOut(),
+      fitView: (opts?: { padding?: number }) => fnsRef.current.fitView(opts),
+    })
     return () => setZoomControls(null)
-  }, [setZoomControls, zoomIn, zoomOut, fitView])
+  }, [setZoomControls])
 
   return null
 }
