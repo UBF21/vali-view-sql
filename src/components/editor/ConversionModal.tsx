@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, ArrowRight, Copy, Check } from 'lucide-react'
+import { X, ArrowRight, Copy, Check, CheckCircle2 } from 'lucide-react'
+import { highlightSQL } from '@/lib/highlight/sql-highlight'
 import { motion, AnimatePresence } from 'framer-motion'
 import { convertDialect } from '@/lib/converter/dialect-converter'
 import type { ConversionChange } from '@/lib/converter/dialect-converter'
@@ -55,23 +56,27 @@ function ModalHeader({ fromLabel, toDialect, targets, onToChange, onClose }: {
 }
 
 function ChangesSummary({ changes, toLabel }: { changes: ConversionChange[]; toLabel: string }) {
-  const containerStyle = { padding: '8px 16px', borderBottom: '1px solid var(--border)', background: 'var(--elevated)' }
   if (changes.length === 0) {
     return (
-      <div style={containerStyle}>
-        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>No automatic conversions needed for {toLabel}.</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--elevated)', borderBottom: '1px solid var(--border)' }}>
+        <CheckCircle2 size={14} style={{ color: '#5DCAA5', flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: 'var(--text-2)' }}>No conversions needed — SQL is already compatible with <strong style={{ color: 'var(--text-1)' }}>{toLabel}</strong>.</span>
       </div>
     )
   }
   return (
-    <div style={containerStyle}>
-      <div style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 4 }}>
+    <div style={{ padding: '8px 16px', background: 'var(--elevated)', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 6, fontWeight: 600 }}>
         {changes.length} transformation{changes.length !== 1 ? 's' : ''} applied
       </div>
-      {changes.slice(0, 5).map((c, i) => (
-        <div key={i} style={{ fontSize: 10, color: 'var(--text-2)' }}>• {c.rule}</div>
-      ))}
-      {changes.length > 5 && <div style={{ fontSize: 10, color: 'var(--text-3)' }}>+ {changes.length - 5} more</div>}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        {changes.slice(0, 6).map((c, i) => (
+          <span key={i} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 12, background: 'rgba(93,202,165,0.12)', color: '#5DCAA5', border: '1px solid rgba(93,202,165,0.3)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+            {c.rule}
+          </span>
+        ))}
+        {changes.length > 6 && <span style={{ fontSize: 10, color: 'var(--text-3)', padding: '2px 4px' }}>+{changes.length - 6} more</span>}
+      </div>
     </div>
   )
 }
@@ -80,11 +85,12 @@ function SqlPreview({ sql }: { sql: string }) {
   return (
     <pre style={{
       flex: 1, overflowY: 'auto', margin: 0, padding: '12px 16px',
-      fontSize: 12, fontFamily: 'monospace', color: 'var(--text-1)',
-      background: 'var(--surface)', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-    }}>
-      {sql}
-    </pre>
+      fontSize: 12, fontFamily: '"JetBrains Mono", "Fira Code", Consolas, monospace',
+      color: 'var(--text-1)', background: 'var(--surface)',
+      whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+    }}
+      dangerouslySetInnerHTML={{ __html: highlightSQL(sql) }}
+    />
   )
 }
 
