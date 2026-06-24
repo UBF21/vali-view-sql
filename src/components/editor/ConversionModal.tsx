@@ -179,7 +179,7 @@ function ModalPanel({ fromDialect, sourceSql, onClose, onApply }: Omit<Conversio
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         zIndex: 999, background: 'var(--surface)', border: '1px solid var(--border-hi)',
         borderRadius: 12, boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
-        width: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        width: 'min(560px, 95vw)', maxHeight: 'min(80vh, calc(100dvh - 32px))', display: 'flex', flexDirection: 'column',
         outline: 'none',
       }}
     >

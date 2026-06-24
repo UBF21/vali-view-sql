@@ -149,7 +149,7 @@ export function AppShell() {
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       {/* Left panel: SQL editor */}
       <div style={{
-        width: 340, flexShrink: 0, borderRight: '1px solid var(--border)',
+        width: 'clamp(220px, 35%, 340px)', flexShrink: 0, borderRight: '1px solid var(--border)',
         padding: 12, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden',
       }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>

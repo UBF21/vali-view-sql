@@ -135,11 +135,12 @@ export function NodeInfoPanel() {
             top: 48,        /* below the header */
             right: 0,
             bottom: 0,
-            width: 340,
+            width: 'min(340px, 100vw)',
             background: 'var(--surface)',
             borderLeft: '1px solid var(--border-hi)',
             zIndex: 50,
             overflowY: 'auto',
+            overflowX: 'hidden',
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '-8px 0 32px rgba(0,0,0,0.25)',
