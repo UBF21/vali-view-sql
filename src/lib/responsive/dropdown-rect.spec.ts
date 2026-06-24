@@ -54,9 +54,15 @@ describe('computeDropdownRect', () => {
     expect(r.maxHeight).toBe(380) // 768 - 40 - 12 = 716 > 380
   })
 
-  it('left mínimo 0 (no negativos)', () => {
+  it('left mínimo 8px (nunca sale por la izquierda)', () => {
     vi.stubGlobal('window', { innerWidth: 375, innerHeight: 667 })
     const r = computeDropdownRect(makeRect({ left: 2 }), 400, 400)
-    expect(r.left).toBeGreaterThanOrEqual(0)
+    expect(r.left).toBeGreaterThanOrEqual(8)
+  })
+
+  it('maxHeight nunca es negativo cuando el botón está cerca del borde inferior', () => {
+    vi.stubGlobal('window', { innerWidth: 1024, innerHeight: 100 })
+    const r = computeDropdownRect(makeRect({ bottom: 95 }), 300, 400)
+    expect(r.maxHeight).toBeGreaterThanOrEqual(0)
   })
 })

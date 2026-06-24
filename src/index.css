@@ -301,6 +301,12 @@ body {
 .side-panel-left  .col-btn { right: 0; border-radius: 0 4px 4px 0; border-left: none; }
 .side-panel-right .col-btn { left: 0;  border-radius: 4px 0 0 4px; border-right: none; }
 
+.node-doc-link:focus-visible {
+  outline: 2px solid var(--a);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 /* Icon strip — visible solo cuando colapsado */
 .icon-strip {
   position: absolute;

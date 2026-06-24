@@ -126,6 +126,8 @@ export function NodeInfoPanel() {
       {infoNode && (
         <motion.div
           key="info-panel"
+          role="complementary"
+          aria-label="Node information"
           initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
@@ -209,6 +211,7 @@ export function NodeInfoPanel() {
                       href={def.pgDoc}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="node-doc-link"
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 4,
                         marginTop: 10, fontSize: 12,

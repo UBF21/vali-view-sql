@@ -69,12 +69,12 @@ function SelectOptions({ targets, value, onSelect }: {
   onSelect: (d: Dialect) => void
 }) {
   return (
-    <div role="listbox" style={SELECT_DROPDOWN_STYLE}>
+    <div role="menu" aria-label="Select target dialect" style={SELECT_DROPDOWN_STYLE}>
       {targets.map(t => (
         <button
           key={t.value}
-          role="option"
-          aria-selected={t.value === value}
+          role="menuitemradio"
+          aria-checked={t.value === value}
           data-value={t.value}
           onClick={() => onSelect(t.value)}
           style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 12px', background: t.value === value ? 'var(--a-soft)' : 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: t.value === value ? 'var(--a)' : 'var(--text-1)', fontFamily: 'inherit' }}
@@ -161,7 +161,7 @@ function ChangesSummary({ changes, toLabel }: { changes: ConversionChange[]; toL
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {changes.slice(0, 6).map((c, i) => (
-          <span key={i} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 12, background: 'rgba(93,202,165,0.12)', color: '#5DCAA5', border: '1px solid rgba(93,202,165,0.3)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+          <span key={`${c.rule}-${i}`} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 12, background: 'rgba(93,202,165,0.12)', color: '#5DCAA5', border: '1px solid rgba(93,202,165,0.3)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
             {c.rule}
           </span>
         ))}

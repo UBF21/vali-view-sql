@@ -38,7 +38,7 @@ function renderModal(props: Partial<React.ComponentProps<typeof ConversionModal>
 /** Opens the dialect dropdown and clicks the option with the given label */
 function selectDialect(label: RegExp | string) {
   fireEvent.click(screen.getByTestId('dialect-select-trigger'))
-  fireEvent.click(screen.getByRole('option', { name: label }))
+  fireEvent.click(screen.getByRole('menuitemradio', { name: label }))
 }
 
 beforeEach(() => {
@@ -75,7 +75,7 @@ describe('ConversionModal — header', () => {
   it('target dropdown trigger excludes source dialect', () => {
     renderModal({ fromDialect: 'postgresql' })
     fireEvent.click(screen.getByTestId('dialect-select-trigger'))
-    const options = screen.getAllByRole('option')
+    const options = screen.getAllByRole('menuitemradio')
     const values = options.map(o => o.getAttribute('data-value'))
     expect(values).not.toContain('postgresql')
     expect(options.length).toBe(3)
