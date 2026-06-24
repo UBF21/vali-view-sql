@@ -40,11 +40,14 @@ export function PanelRight() {
           <TabsTrigger value="issues" style={{ fontSize: 11, padding: '3px 7px', position: 'relative', whiteSpace: 'nowrap' }}>
             Issues
             {(errorCount + warnCount) > 0 && (
-              <span style={{
-                marginLeft: 4, fontSize: 10, padding: '0 4px',
-                background: errorCount > 0 ? '#E24B4A' : '#EF9F27',
-                color: '#fff', borderRadius: 10, fontWeight: 600,
-              }}>
+              <span
+                aria-label={`${errorCount + warnCount} issue${errorCount + warnCount !== 1 ? 's' : ''}`}
+                style={{
+                  marginLeft: 4, fontSize: 10, padding: '0 4px',
+                  background: errorCount > 0 ? '#E24B4A' : '#EF9F27',
+                  color: '#fff', borderRadius: 10, fontWeight: 600,
+                }}
+              >
                 {errorCount + warnCount}
               </span>
             )}
@@ -52,10 +55,13 @@ export function PanelRight() {
           <TabsTrigger value="suggestions" style={{ fontSize: 11, padding: '3px 7px', whiteSpace: 'nowrap' }}>
             Suggestions
             {suggestions.length > 0 && (
-              <span style={{
-                marginLeft: 4, fontSize: 10, padding: '0 4px',
-                background: '#1D9E75', color: '#fff', borderRadius: 10, fontWeight: 600,
-              }}>
+              <span
+                aria-label={`${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''}`}
+                style={{
+                  marginLeft: 4, fontSize: 10, padding: '0 4px',
+                  background: '#1D9E75', color: '#fff', borderRadius: 10, fontWeight: 600,
+                }}
+              >
                 {suggestions.length}
               </span>
             )}

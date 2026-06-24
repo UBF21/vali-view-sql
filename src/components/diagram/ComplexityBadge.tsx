@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 import type { ComplexityLevel, ComplexityBreakdown } from '@/lib/complexity/complexity-score'
 
@@ -59,6 +59,14 @@ function BreakdownPanel({ breakdown, score, color }: BreakdownPanelProps) {
 export function ComplexityBadge() {
   const [open, setOpen] = useState(false)
   const result = useAppStore((s) => s.complexityResult)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open])
+
   if (!result) return null
 
   const color = LEVEL_COLOR[result.level]

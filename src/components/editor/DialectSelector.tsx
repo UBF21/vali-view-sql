@@ -106,7 +106,7 @@ function DialectRow({ d, isActive, onSelect }: { d: DialectOption; isActive: boo
   )
 }
 
-const DROPDOWN_H = 244 // altura aprox del listbox con 4 opciones
+const DROPDOWN_H = DIALECTS.length * 61 + 8
 
 interface DropCoords { top?: number; bottom?: number; right: number }
 
@@ -195,13 +195,15 @@ function ConvertButton({ value, query, onQueryChange, onChange }: {
   onChange:       (d: Dialect) => void
 }) {
   const [open, setOpen] = useState(false)
+  const hasQuery = query.trim().length > 0
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => hasQuery && setOpen(true)}
+        disabled={!hasQuery}
         aria-label="Convert SQL to another dialect"
-        title="Convert to another dialect"
-        style={{ background: 'var(--elevated)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-2)' }}
+        title={hasQuery ? 'Convert to another dialect' : 'Type a SQL query first to convert'}
+        style={{ background: 'var(--elevated)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 7px', cursor: hasQuery ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-2)', opacity: hasQuery ? 1 : 0.45 }}
       >
         <ArrowLeftRight size={12} />
       </button>
