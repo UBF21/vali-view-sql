@@ -114,7 +114,7 @@ describe('ConversionModal — changes summary', () => {
     // change target to postgresql
     const select = screen.getByRole('combobox') as HTMLSelectElement
     fireEvent.change(select, { target: { value: 'postgresql' } })
-    expect(screen.getByText(/no automatic conversions needed/i)).toBeDefined()
+    expect(screen.getByText(/no conversions needed/i)).toBeDefined()
   })
 
   it('shows transformation count when conversions applied', () => {
