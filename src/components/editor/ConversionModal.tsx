@@ -20,12 +20,18 @@ export interface ConversionModalProps {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
+const MODAL_WRAPPER_STYLE: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 999,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  pointerEvents: 'none',
+}
+
 const MODAL_STYLE: React.CSSProperties = {
-  position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-  zIndex: 999, background: 'var(--surface)', border: '1px solid var(--border-hi)',
+  background: 'var(--surface)', border: '1px solid var(--border-hi)',
   borderRadius: 12, boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
   width: 'min(560px, 95vw)', maxHeight: 'min(80vh, calc(100dvh - 32px))',
   display: 'flex', flexDirection: 'column', outline: 'none',
+  pointerEvents: 'auto',
 }
 
 const PANEL_ANIM = {
@@ -231,14 +237,16 @@ function ModalPanel({ fromDialect, sourceSql, onClose, onApply }: Omit<Conversio
   useEffect(() => { panelRef.current?.focus() }, [])
 
   return (
-    <motion.div ref={panelRef} tabIndex={-1} {...PANEL_ANIM}
-      role="dialog" aria-modal="true" aria-label="Convert SQL dialect" style={MODAL_STYLE}
-    >
-      <ModalHeader fromLabel={fromLabel} toDialect={toDialect} targets={targets} onToChange={setToDialect} onClose={onClose} />
-      <ChangesSummary changes={changes} toLabel={toLabel} />
-      <SqlPreview sql={convertedSQL} />
-      <ModalFooter copied={copied} onCopy={handleCopy} onApply={() => { onApply(convertedSQL, toDialect); onClose() }} />
-    </motion.div>
+    <div style={MODAL_WRAPPER_STYLE}>
+      <motion.div ref={panelRef} tabIndex={-1} {...PANEL_ANIM}
+        role="dialog" aria-modal="true" aria-label="Convert SQL dialect" style={MODAL_STYLE}
+      >
+        <ModalHeader fromLabel={fromLabel} toDialect={toDialect} targets={targets} onToChange={setToDialect} onClose={onClose} />
+        <ChangesSummary changes={changes} toLabel={toLabel} />
+        <SqlPreview sql={convertedSQL} />
+        <ModalFooter copied={copied} onCopy={handleCopy} onApply={() => { onApply(convertedSQL, toDialect); onClose() }} />
+      </motion.div>
+    </div>
   )
 }
 
