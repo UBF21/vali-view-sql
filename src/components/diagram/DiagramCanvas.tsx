@@ -7,6 +7,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { customNodeTypes } from './nodes'
+import { LabeledJoinEdge } from './edges/LabeledJoinEdge'
 import { NodeInfoPanel } from './NodeInfoPanel'
 import { ComplexityBadge } from './ComplexityBadge'
 import { useAppStore } from '@/store/useAppStore'
@@ -43,6 +44,8 @@ const VIGNETTE_STYLE: CSSProperties = {
   background: 'radial-gradient(ellipse at center, transparent 40%, var(--canvas-vignette) 100%)',
 }
 
+const EDGE_TYPES = { 'labeled-join': LabeledJoinEdge }
+
 function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, className }: FlowCanvasProps) {
   const setInfoNode = useAppStore((s) => s.setInfoNode)
   const handleNodeClick = useCallback<NodeMouseHandler<Node<SQLNodeData>>>((_evt, node) => {
@@ -53,7 +56,7 @@ function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, 
     <div ref={containerRef} className={className} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ComplexityBadge />
       <ReactFlow
-        nodes={nodes} edges={edges} nodeTypes={customNodeTypes}
+        nodes={nodes} edges={edges} nodeTypes={customNodeTypes} edgeTypes={EDGE_TYPES}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick} fitView fitViewOptions={{ padding: 0.2 }}
         minZoom={0.3} maxZoom={2} proOptions={{ hideAttribution: true }}

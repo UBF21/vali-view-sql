@@ -266,7 +266,7 @@ function astToGraphInner(
         if (lastNodeId && !sourceNodeIds.includes(lastNodeId)) {
           edges.push(makeJoinEdge(lastNodeId, joinId, 'left'))
         }
-        edges.push(makeJoinEdge(joinedTableId, joinId, 'right'))
+        edges.push(makeJoinEdge(joinedTableId, joinId, 'right', onCondition))
         sourceNodeIds.push(joinId)
         lastNodeId = joinId
         glossary.push({
@@ -654,12 +654,13 @@ function makeDataEdge(source: string, target: string): Edge {
   }
 }
 
-function makeJoinEdge(source: string, target: string, targetHandle?: string): Edge {
+function makeJoinEdge(source: string, target: string, targetHandle?: string, onCondition?: string): Edge {
   return {
     id: `e-${source}-${target}-${targetHandle ?? ''}`,
     source,
     target,
     targetHandle,
+    ...(onCondition ? { type: 'labeled-join', data: { onCondition } } : {}),
     animated: true,
     style: { stroke: '#5DCAA5', strokeWidth: 1.5, strokeDasharray: '5,4' },
     markerEnd: { type: MarkerType.ArrowClosed, color: '#5DCAA5' },
