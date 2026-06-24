@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from 'react'
+import { useRef, useCallback, useMemo, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { AlignLeft } from 'lucide-react'
 import { formatSQL } from '@/lib/formatter/sql-formatter'
@@ -169,6 +169,20 @@ export function QueryEditor({ value, onChange, dialect, placeholder, className, 
     () => highlightSQLWithClause(value, highlightClause),
     [value, highlightClause],
   )
+
+  useEffect(() => {
+    if (!highlightClause || !textareaRef.current) return
+    const textarea = textareaRef.current
+    const idx = value.indexOf(highlightClause)
+    if (idx === -1) return
+    const linesBefore = value.substring(0, idx).split('\n').length - 1
+    const lineHeightPx = 13 * 1.6
+    const paddingTop = 12
+    const targetTop = paddingTop + linesBefore * lineHeightPx
+    const scrollTop = Math.max(0, targetTop - textarea.clientHeight / 3)
+    textarea.scrollTop = scrollTop
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollTop
+  }, [highlightClause, value])
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value),
