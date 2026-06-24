@@ -65,6 +65,9 @@ interface AppStore {
   schema:      Schema | null
   loadSchema:  (ddl: string) => void
   clearSchema: () => void
+
+  zoomControls: { zoomIn: () => void; zoomOut: () => void; fitView: (opts?: { padding?: number }) => void } | null
+  setZoomControls: (c: { zoomIn: () => void; zoomOut: () => void; fitView: (opts?: { padding?: number }) => void } | null) => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -144,6 +147,9 @@ export const useAppStore = create<AppStore>()(
 
       setInfoNode: (infoNode) => set({ infoNode }),
       setComplexityResult: (complexityResult) => set({ complexityResult }),
+
+      zoomControls: null,
+      setZoomControls: (zoomControls) => set({ zoomControls }),
     }),
     {
       name: 'vali-viewsql-store',

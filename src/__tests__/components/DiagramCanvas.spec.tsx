@@ -5,9 +5,9 @@ import { DiagramCanvas } from '@/components/diagram/DiagramCanvas'
 
 vi.mock('@xyflow/react', () => ({
   ReactFlow: ({ children }: { children: React.ReactNode }) => <div data-testid="reactflow">{children}</div>,
-  Controls: () => <div />,
   useNodesState: (n: unknown[]) => [n, vi.fn(), vi.fn()] as const,
   useEdgesState: (e: unknown[]) => [e, vi.fn(), vi.fn()] as const,
+  useReactFlow: () => ({ zoomIn: vi.fn(), zoomOut: vi.fn(), fitView: vi.fn() }),
 }))
 
 vi.mock('@/hooks/useSQLParseAnim', () => ({
@@ -15,8 +15,8 @@ vi.mock('@/hooks/useSQLParseAnim', () => ({
 }))
 
 vi.mock('@/store/useAppStore', () => ({
-  useAppStore: (sel: (s: { setInfoNode: () => void; complexityResult: null }) => unknown) =>
-    sel({ setInfoNode: vi.fn(), complexityResult: null }),
+  useAppStore: (sel: (s: { setInfoNode: () => void; complexityResult: null; setZoomControls: () => void }) => unknown) =>
+    sel({ setInfoNode: vi.fn(), complexityResult: null, setZoomControls: vi.fn() }),
 }))
 
 vi.mock('@/components/diagram/NodeInfoPanel', () => ({ NodeInfoPanel: () => null }))

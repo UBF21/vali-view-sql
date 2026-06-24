@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, type CSSProperties } from 'react'
 import {
-  ReactFlow, Controls,
-  useNodesState, useEdgesState,
+  ReactFlow,
+  useNodesState, useEdgesState, useReactFlow,
   type Node, type Edge, type NodeMouseHandler,
   type OnNodesChange, type OnEdgesChange,
 } from '@xyflow/react'
@@ -46,6 +46,18 @@ const VIGNETTE_STYLE: CSSProperties = {
 
 const EDGE_TYPES = { 'labeled-join': LabeledJoinEdge }
 
+function ZoomBridge() {
+  const { zoomIn, zoomOut, fitView } = useReactFlow()
+  const setZoomControls = useAppStore(s => s.setZoomControls)
+
+  useEffect(() => {
+    setZoomControls({ zoomIn, zoomOut, fitView })
+    return () => setZoomControls(null)
+  }, [setZoomControls, zoomIn, zoomOut, fitView])
+
+  return null
+}
+
 function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, className }: FlowCanvasProps) {
   const setInfoNode = useAppStore((s) => s.setInfoNode)
   const handleNodeClick = useCallback<NodeMouseHandler<Node<SQLNodeData>>>((_evt, node) => {
@@ -62,7 +74,7 @@ function FlowCanvas({ nodes, edges, onNodesChange, onEdgesChange, containerRef, 
         minZoom={0.3} maxZoom={2} proOptions={{ hideAttribution: true }}
         style={FLOW_STYLE}
       >
-        <Controls />
+        <ZoomBridge />
       </ReactFlow>
       <div style={VIGNETTE_STYLE} />
       <NodeInfoPanel />

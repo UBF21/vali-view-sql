@@ -10,6 +10,7 @@ import { buildSteps, decorateNodesForStep, decorateEdgesForStep } from '@/lib/st
 import { useStepAnimation } from '@/hooks/useStepAnimation'
 import { StepperControls } from '@/components/diagram/StepperControls'
 import { ExportButton } from '@/components/diagram/ExportButton'
+import { ZoomButtons } from '@/components/diagram/ZoomButtons'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
 import { CollectionPicker } from '@/components/editor/CollectionPicker'
 import type { Node, Edge, SQLNodeData } from '@/types'
@@ -263,7 +264,8 @@ export function AppShell() {
         <div style={{ width: '100%', height: '100%' }}>
           <DiagramCanvas nodes={nodes} edges={edges} />
         </div>
-        <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5 }}>
+        <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 5, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ZoomButtons />
           <ExportButton />
         </div>
 
