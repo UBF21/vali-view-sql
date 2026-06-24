@@ -121,6 +121,7 @@ describe('SchemaPanel — schema cargado (1 tabla)', () => {
   })
 
   it('llama clearSchema al clicar Clear', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
     render(<SchemaPanel />)
     fireEvent.click(screen.getByRole('button', { name: /clear schema/i }))
     expect(mockClearSchema).toHaveBeenCalledOnce()

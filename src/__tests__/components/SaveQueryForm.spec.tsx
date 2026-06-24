@@ -13,14 +13,16 @@ const COLLECTIONS = [
 
 const storeState = { collections: COLLECTIONS as typeof COLLECTIONS }
 
-vi.mock('@/store/useAppStore', () => ({
-  useAppStore: (sel: (s: object) => unknown) =>
+vi.mock('@/store/useAppStore', () => {
+  const useAppStore = (sel: (s: object) => unknown) =>
     sel({
       collections:           storeState.collections,
       saveQueryToCollection: mockSaveQueryToCollection,
       addCollection:         mockAddCollection,
-    }),
-}))
+    })
+  useAppStore.getState = () => ({ collections: storeState.collections })
+  return { useAppStore }
+})
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -52,7 +54,7 @@ describe('SaveQueryForm', () => {
     const onClose = vi.fn()
     render(<SaveQueryForm onClose={onClose} />)
     fireEvent.change(screen.getByPlaceholderText('My query name'), { target: { value: 'Test Q' } })
-    fireEvent.change(screen.getByPlaceholderText('reporting, slow, draft'), { target: { value: 'a, b' } })
+    fireEvent.change(screen.getByPlaceholderText('tag1, tag2, tag3'), { target: { value: 'a, b' } })
     fireEvent.submit(screen.getByRole('form', { name: /save query form/i }))
     expect(mockSaveQueryToCollection).toHaveBeenCalledWith('col_1', {
       name: 'Test Q', description: undefined, tags: ['a', 'b'],
