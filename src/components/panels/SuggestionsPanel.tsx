@@ -21,15 +21,23 @@ const CATEGORY_ICON: Record<string, React.ReactNode> = {
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function ApplyButton({ id, title, onApply }: { id: string; title: string; onApply: (id: string) => void }) {
+function ApplyButton({ id, title, onApply, rewritable }: {
+  id: string; title: string; onApply: (id: string) => void; rewritable: boolean
+}) {
   return (
     <button
-      onClick={() => onApply(id)}
-      aria-label={`Apply suggestion: ${title}`}
+      onClick={() => rewritable && onApply(id)}
+      disabled={!rewritable}
+      aria-label={rewritable ? `Apply suggestion: ${title}` : `Auto-apply not available: ${title}`}
+      title={rewritable ? undefined : 'Auto-apply not available for this suggestion'}
       style={{
         fontSize: 10, padding: '2px 8px', borderRadius: 4,
-        background: 'var(--a)', color: '#000', border: 'none',
-        cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3,
+        background: rewritable ? 'var(--a)' : 'var(--bg-elevated)',
+        color: rewritable ? '#000' : 'var(--text-3)',
+        border: rewritable ? 'none' : '1px solid var(--border)',
+        cursor: rewritable ? 'pointer' : 'not-allowed',
+        fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3,
+        opacity: rewritable ? 1 : 0.6,
       }}
     >
       <Check size={10} /> Apply
@@ -50,9 +58,12 @@ function CardHeader({ suggestion, onApply }: { suggestion: Suggestion; onApply: 
       <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 10, background: impactColor, color: '#fff', fontWeight: 600 }}>
         {suggestion.impact}
       </span>
-      {canRewrite(suggestion.id) && (
-        <ApplyButton id={suggestion.id} title={suggestion.title} onApply={onApply} />
-      )}
+      <ApplyButton
+        id={suggestion.id}
+        title={suggestion.title}
+        onApply={onApply}
+        rewritable={canRewrite(suggestion.id)}
+      />
     </div>
   )
 }

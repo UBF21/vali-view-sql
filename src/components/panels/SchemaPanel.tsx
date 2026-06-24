@@ -47,6 +47,13 @@ function TableTree({ tableName, table }: TableTreeProps) {
 
 function SchemaLoaded({ tables }: { tables: [string, SchemaTable][] }) {
   const clearSchema = useAppStore((s) => s.clearSchema)
+
+  const handleClear = () => {
+    if (window.confirm('Clear schema? This will disable column validation until you reload it.')) {
+      clearSchema()
+    }
+  }
+
   return (
     <div style={{ padding: 12, overflowY: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -54,7 +61,7 @@ function SchemaLoaded({ tables }: { tables: [string, SchemaTable][] }) {
           {tables.length} table{tables.length !== 1 ? 's' : ''} loaded
         </span>
         <button
-          onClick={clearSchema}
+          onClick={handleClear}
           aria-label="Clear schema"
           style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'none', border: '1px solid var(--border)', cursor: 'pointer', color: '#E24B4A', display: 'flex', alignItems: 'center', gap: 4 }}
         >
