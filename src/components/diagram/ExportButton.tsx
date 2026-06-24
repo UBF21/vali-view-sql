@@ -66,9 +66,9 @@ function useExportState() {
 }
 
 export function ExportButton() {
-  const nodes = useAppStore((s) => s.parseResult?.nodes ?? [])
+  const hasNodes = useAppStore((s) => Boolean(s.parseResult?.nodes?.length))
   const { exporting, error, handle } = useExportState()
-  const canvasEmpty = nodes.length === 0
+  const canvasEmpty = !hasNodes
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
