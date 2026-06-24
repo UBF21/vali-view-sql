@@ -76,6 +76,14 @@ describe('useExport — exportPNG', () => {
     expect(link.download).toMatch(/vali-view-sql-\d+\.png/)
     expect(link.href).toBe('data:image/png;base64,ABC')
   })
+
+  it('propaga el error si toPng falla (sin try/catch)', async () => {
+    const { toPng } = await import('html-to-image')
+    vi.mocked(toPng).mockRejectedValueOnce(new Error('canvas error'))
+    mockFlowEl()
+    const { result } = renderHook(() => useExport())
+    await expect(act(() => result.current.exportPNG())).rejects.toThrow('canvas error')
+  })
 })
 
 describe('useExport — exportSVG', () => {
@@ -97,6 +105,14 @@ describe('useExport — exportSVG', () => {
     expect(link.click).toHaveBeenCalled()
     expect(link.download).toMatch(/vali-view-sql-\d+\.svg/)
     expect(link.href).toBe('data:image/svg+xml;base64,XYZ')
+  })
+
+  it('propaga el error si toSvg falla (sin try/catch)', async () => {
+    const { toSvg } = await import('html-to-image')
+    vi.mocked(toSvg).mockRejectedValueOnce(new Error('svg error'))
+    mockFlowEl()
+    const { result } = renderHook(() => useExport())
+    await expect(act(() => result.current.exportSVG())).rejects.toThrow('svg error')
   })
 })
 

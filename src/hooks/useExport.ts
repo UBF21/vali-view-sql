@@ -13,29 +13,21 @@ function useExportDiagram() {
   const exportPNG = useCallback(async () => {
     const el = getFlowEl(canvasRef)
     if (!el) return
-    try {
-      const dataUrl = await toPng(el, { cacheBust: true, backgroundColor: 'var(--bg-primary)' })
-      const link = document.createElement('a')
-      link.download = `vali-view-sql-${Date.now()}.png`
-      link.href = dataUrl
-      link.click()
-    } catch (err) {
-      if (import.meta.env.DEV) console.error('[useExport] PNG failed:', err)
-    }
+    const dataUrl = await toPng(el, { cacheBust: true, backgroundColor: 'var(--bg-primary)' })
+    const link = document.createElement('a')
+    link.download = `vali-view-sql-${Date.now()}.png`
+    link.href = dataUrl
+    link.click()
   }, [])
 
   const exportSVG = useCallback(async () => {
     const el = getFlowEl(canvasRef)
     if (!el) return
-    try {
-      const dataUrl = await toSvg(el, { cacheBust: true })
-      const link = document.createElement('a')
-      link.download = `vali-view-sql-${Date.now()}.svg`
-      link.href = dataUrl
-      link.click()
-    } catch (err) {
-      if (import.meta.env.DEV) console.error('[useExport] SVG failed:', err)
-    }
+    const dataUrl = await toSvg(el, { cacheBust: true })
+    const link = document.createElement('a')
+    link.download = `vali-view-sql-${Date.now()}.svg`
+    link.href = dataUrl
+    link.click()
   }, [])
 
   return { exportPNG, exportSVG, canvasRef }
