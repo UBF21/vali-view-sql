@@ -13,6 +13,7 @@ import { ExportButton } from '@/components/diagram/ExportButton'
 import { ZoomButtons } from '@/components/diagram/ZoomButtons'
 import { ExamplePicker } from '@/components/editor/ExamplePicker'
 import { CollectionPicker } from '@/components/editor/CollectionPicker'
+import { SnippetPicker } from '@/components/editor/SnippetPicker'
 import type { Node, Edge, SQLNodeData } from '@/types'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { MobileExplainLayout } from '@/components/mobile/MobileExplainLayout'
@@ -30,6 +31,9 @@ export function AppShell() {
   const infoNode = useAppStore((s) => s.infoNode)
 
   const highlightClause = infoNode?.clause
+
+  const pendingSnippet      = useAppStore(s => s.pendingSnippet)
+  const clearPendingSnippet = useAppStore(s => s.clearPendingSnippet)
 
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
@@ -223,10 +227,11 @@ export function AppShell() {
             <span className="panel-label">SQL Query</span>
             <div style={{ display: 'flex', gap: 6 }}>
               <CollectionPicker />
+              <SnippetPicker />
               <ExamplePicker />
             </div>
           </div>
-          <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} />
+          <QueryEditor value={query} onChange={setQuery} dialect={dialect} style={{ flex: 1 }} highlightClause={highlightClause} pendingSnippet={pendingSnippet} clearPendingSnippet={clearPendingSnippet} />
         </div>
 
         {/* Icon strip */}

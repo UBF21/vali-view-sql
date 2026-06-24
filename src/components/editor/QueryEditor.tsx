@@ -12,6 +12,8 @@ interface QueryEditorProps {
   className?: string
   style?: CSSProperties
   highlightClause?: string
+  pendingSnippet?: string | null
+  clearPendingSnippet?: () => void
 }
 
 // SQL tokenizer — processes in priority order to avoid keyword matches inside strings/comments
@@ -161,7 +163,7 @@ const SHARED: CSSProperties = {
   minHeight: '100%',
 }
 
-export function QueryEditor({ value, onChange, dialect, placeholder, className, style, highlightClause }: QueryEditorProps) {
+export function QueryEditor({ value, onChange, dialect, placeholder, className, style, highlightClause, pendingSnippet, clearPendingSnippet }: QueryEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLPreElement>(null)
 
@@ -183,6 +185,22 @@ export function QueryEditor({ value, onChange, dialect, placeholder, className, 
     textarea.scrollTop = scrollTop
     if (scrollRef.current) scrollRef.current.scrollTop = scrollTop
   }, [highlightClause, value])
+
+  useEffect(() => {
+    if (!pendingSnippet || !textareaRef.current) return
+    const textarea = textareaRef.current
+    if (!value.trim()) {
+      onChange(pendingSnippet)
+    } else {
+      const start = textarea.selectionStart
+      const next = value.substring(0, start) + '\n' + pendingSnippet + value.substring(start)
+      onChange(next)
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1 + pendingSnippet.length
+      })
+    }
+    clearPendingSnippet?.()
+  }, [pendingSnippet]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value),

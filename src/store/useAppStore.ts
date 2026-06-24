@@ -68,6 +68,10 @@ interface AppStore {
 
   zoomControls: { zoomIn: () => void; zoomOut: () => void; fitView: (opts?: { padding?: number }) => void } | null
   setZoomControls: (c: { zoomIn: () => void; zoomOut: () => void; fitView: (opts?: { padding?: number }) => void } | null) => void
+
+  pendingSnippet: string | null
+  setPendingSnippet: (sql: string) => void
+  clearPendingSnippet: () => void
 }
 
 export const useAppStore = create<AppStore>()(
@@ -150,6 +154,10 @@ export const useAppStore = create<AppStore>()(
 
       zoomControls: null,
       setZoomControls: (zoomControls) => set({ zoomControls }),
+
+      pendingSnippet: null,
+      setPendingSnippet: (pendingSnippet) => set({ pendingSnippet }),
+      clearPendingSnippet: () => set({ pendingSnippet: null }),
     }),
     {
       name: 'vali-viewsql-store',
