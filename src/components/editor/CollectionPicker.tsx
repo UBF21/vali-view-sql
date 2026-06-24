@@ -55,11 +55,16 @@ function QueryRow({ query, isLast, onClick }: { query: SavedQuery; isLast: boole
 }
 
 function CollectionHeader({ col, onDelete }: { col: SavedCollection; onDelete: (id: string) => void }) {
+  const handleDelete = () => {
+    if (window.confirm(`Delete collection "${col.name}" and all its queries?`)) {
+      onDelete(col.id)
+    }
+  }
   return (
     <div style={{ padding: '6px 10px', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.09em', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', background: 'var(--elevated)' }}>
       <span>{col.name} ({col.queries.length})</span>
       {col.id !== 'col_recent_migrated' && (
-        <button onClick={() => onDelete(col.id)} aria-label={`Delete collection ${col.name}`} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E24B4A', padding: 2 }}>
+        <button onClick={handleDelete} aria-label={`Delete collection ${col.name}`} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E24B4A', padding: 2 }}>
           <Trash2 size={10} />
         </button>
       )}
@@ -91,12 +96,18 @@ function DropdownSearch({ search, onChange, onShowSave }: { search: string; onCh
   )
 }
 
-function DropdownList({ filtered, search, onSelect, onDelete }: { filtered: SavedCollection[]; search: string; onSelect: (q: SavedQuery) => void; onDelete: (id: string) => void }) {
+function DropdownList({ filtered, search, hasCollections, onSelect, onDelete }: { filtered: SavedCollection[]; search: string; hasCollections: boolean; onSelect: (q: SavedQuery) => void; onDelete: (id: string) => void }) {
+  const emptyMsg = search
+    ? 'No queries match your search'
+    : hasCollections
+      ? 'No queries saved in any collection yet'
+      : 'No saved queries yet — create a collection to get started'
+
   return (
     <div style={{ overflowY: 'auto', flex: 1 }}>
       {filtered.length === 0 && (
         <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: 'var(--text-3)' }}>
-          {search ? 'No queries match your search' : 'No saved queries yet'}
+          {emptyMsg}
         </div>
       )}
       {filtered.map(col => (
@@ -158,7 +169,7 @@ export function CollectionPicker() {
         <div style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: 320, maxHeight: 400, background: 'var(--surface)', border: '1px solid var(--border-hi)', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.28)', zIndex: 9999, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {showSave
             ? <SaveQueryForm onClose={() => setShowSave(false)} />
-            : <><DropdownSearch search={search} onChange={setSearch} onShowSave={() => setShowSave(true)} /><DropdownList filtered={filtered} search={search} onSelect={handleSelect} onDelete={removeCollection} /></>
+            : <><DropdownSearch search={search} onChange={setSearch} onShowSave={() => setShowSave(true)} /><DropdownList filtered={filtered} search={search} hasCollections={collections.length > 0} onSelect={handleSelect} onDelete={removeCollection} /></>
           }
         </div>,
         document.body,

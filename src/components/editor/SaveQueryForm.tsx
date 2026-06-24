@@ -86,8 +86,11 @@ function useSaveQueryForm(onClose: () => void) {
 
   const handleCreateCollection = () => {
     if (!newColName.trim()) return
-    addCollection(newColName.trim())
+    const trimmed = newColName.trim()
+    addCollection(trimmed)
     setNewColName('')
+    const newCol = useAppStore.getState().collections.find(c => c.name === trimmed)
+    if (newCol) setColId(newCol.id)
   }
 
   return { name, setName, desc, setDesc, tags, setTags, colId, setColId, newColName, setNewColName, handleSubmit, handleCreateCollection }
@@ -105,7 +108,7 @@ export function SaveQueryForm({ onClose }: SaveQueryFormProps) {
         <input style={inputStyle} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Optional" />
       </FormField>
       <FormField label="Tags (comma-separated)">
-        <input style={inputStyle} value={tags} onChange={e => setTags(e.target.value)} placeholder="reporting, slow, draft" />
+        <input style={inputStyle} value={tags} onChange={e => setTags(e.target.value)} placeholder="tag1, tag2, tag3" />
       </FormField>
       <CollectionSelect colId={colId} onChange={setColId} />
       <NewCollectionRow value={newColName} onChange={setNewColName} onCreate={handleCreateCollection} />

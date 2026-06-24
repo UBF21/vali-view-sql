@@ -125,11 +125,13 @@ describe('CollectionPicker', () => {
     expect(screen.getByPlaceholderText('Search queries...')).toBeDefined()
   })
 
-  it('calls removeCollection when delete button is clicked', () => {
+  it('calls removeCollection when delete button is clicked and user confirms', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
     render(<CollectionPicker />)
     fireEvent.click(screen.getByRole('button', { name: /query collections/i }))
     fireEvent.click(screen.getByRole('button', { name: /delete collection favorites/i }))
     expect(mockRemoveCollection).toHaveBeenCalledWith('col_1')
+    vi.restoreAllMocks()
   })
 
   it('shows dialect badges for queries', () => {
