@@ -147,8 +147,8 @@ function nodeContainerStyle({ accentColor, bgColor, selected, isActive, diffStat
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 const INFO_BTN_STYLE: CSSProperties = {
-  background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.12)',
+  background: 'var(--elevated)',
+  border: '1px solid var(--border-hi)',
   borderRadius: 4, cursor: 'pointer', color: 'inherit',
   padding: '2px 4px', flexShrink: 0, display: 'flex',
   alignItems: 'center', opacity: 0.75, transition: 'opacity 0.15s, background 0.15s',
@@ -157,8 +157,8 @@ const INFO_BTN_STYLE: CSSProperties = {
 function InfoButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
   return (
     <button onClick={onClick} aria-label="Show node info" style={INFO_BTN_STYLE}
-      onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.opacity = '1'; b.style.background = 'rgba(255,255,255,0.14)' }}
-      onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.opacity = '0.75'; b.style.background = 'rgba(255,255,255,0.07)' }}
+      onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.opacity = '1'; b.style.background = 'var(--a-soft)' }}
+      onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.opacity = '0.75'; b.style.background = 'var(--elevated)' }}
     >
       <Info size={11} />
     </button>

@@ -39,6 +39,17 @@
   --n-warn:  #B07030; --n-warn-bg: rgba(176,112,48,0.08);  --n-warn-b: rgba(176,112,48,0.22);
   --n-info:  #2A8CB8; --n-info-bg: rgba(42,140,184,0.08);  --n-info-b: rgba(42,140,184,0.22);
 
+  /* Extended node colors — light mode */
+  --n-subquery:  #A02878; --n-subquery-bg: rgba(160,40,120,0.07);  --n-subquery-b: rgba(160,40,120,0.22);
+  --n-proc:      #4B4AA0; --n-proc-bg:    rgba(75,74,160,0.07);   --n-proc-b:    rgba(75,74,160,0.22);
+  --n-param:     #4848A8; --n-param-bg:   rgba(72,72,168,0.07);   --n-param-b:   rgba(72,72,168,0.22);
+  --n-declare:   #6858C8; --n-declare-bg: rgba(104,88,200,0.07);  --n-declare-b: rgba(104,88,200,0.22);
+  --n-cond:      #B85820; --n-cond-bg:    rgba(184,88,32,0.07);   --n-cond-b:    rgba(184,88,32,0.22);
+  --n-loop:      #B02040; --n-loop-bg:    rgba(176,32,64,0.07);   --n-loop-b:    rgba(176,32,64,0.22);
+  --n-merge:     #0A7868; --n-merge-bg:   rgba(10,120,104,0.07);  --n-merge-b:   rgba(10,120,104,0.22);
+  --n-pivot:     #6438B8; --n-pivot-bg:   rgba(100,56,184,0.07);  --n-pivot-b:   rgba(100,56,184,0.22);
+  --n-unpivot:   #A01870; --n-unpivot-bg: rgba(160,24,112,0.07);  --n-unpivot-b: rgba(160,24,112,0.22);
+
   /* Panel layout */
   --panel-w:    290px;
   --icon-strip: 44px;
@@ -46,7 +57,7 @@
 
   /* Canvas */
   --canvas-dot:      rgba(0,0,0,0.06);
-  --canvas-vignette: transparent;
+  --canvas-vignette: rgba(200,200,210,0.25);
 }
 
 .dark {
@@ -81,6 +92,17 @@
   --n-err:   #C0404A; --n-err-bg:  rgba(192,64,74,0.08);   --n-err-b:  rgba(192,64,74,0.22);
   --n-warn:  #B87030; --n-warn-bg: rgba(184,112,48,0.08);  --n-warn-b: rgba(184,112,48,0.22);
   --n-info:  #2A8CB8; --n-info-bg: rgba(42,140,184,0.08);  --n-info-b: rgba(42,140,184,0.22);
+
+  /* Extended node colors — dark mode */
+  --n-subquery:  #DC64A0; --n-subquery-bg: rgba(220,100,160,0.07); --n-subquery-b: rgba(220,100,160,0.35);
+  --n-proc:      #8B8CF8; --n-proc-bg:    rgba(99,102,241,0.08);  --n-proc-b:    rgba(99,102,241,0.35);
+  --n-param:     #818CF8; --n-param-bg:   rgba(129,140,248,0.07); --n-param-b:   rgba(129,140,248,0.33);
+  --n-declare:   #A78BFA; --n-declare-bg: rgba(167,139,250,0.07); --n-declare-b: rgba(167,139,250,0.33);
+  --n-cond:      #FB923C; --n-cond-bg:    rgba(251,146,60,0.07);  --n-cond-b:    rgba(251,146,60,0.33);
+  --n-loop:      #FB7185; --n-loop-bg:    rgba(251,113,133,0.07); --n-loop-b:    rgba(251,113,133,0.33);
+  --n-merge:     #14B8A6; --n-merge-bg:   rgba(20,184,166,0.07);  --n-merge-b:   rgba(20,184,166,0.33);
+  --n-pivot:     #8B5CF6; --n-pivot-bg:   rgba(139,92,246,0.07);  --n-pivot-b:   rgba(139,92,246,0.33);
+  --n-unpivot:   #EC4899; --n-unpivot-bg: rgba(236,72,153,0.07);  --n-unpivot-b: rgba(236,72,153,0.33);
 
   /* Canvas */
   --canvas-dot:      rgba(255,255,255,0.10);
@@ -330,7 +352,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 7px;
-  background: rgba(255,255,255,.04);
+  background: var(--elevated);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -372,7 +394,7 @@ body {
 .drawer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8,8,16,.7);
+  background: rgba(0,0,0,.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   opacity: 0;
@@ -416,7 +438,7 @@ body {
 .drawer-close {
   width: 26px; height: 26px;
   border-radius: 6px;
-  background: rgba(255,255,255,.05);
+  background: var(--elevated);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -426,7 +448,7 @@ body {
   transition: all 0.2s;
 }
 .drawer-close:hover {
-  background: rgba(255,255,255,.1);
+  background: var(--border-hi);
   color: var(--text-1);
 }
 
@@ -446,7 +468,7 @@ body {
 .fab {
   width: 36px; height: 36px;
   border-radius: 10px;
-  background: rgba(13,13,22,.92);
+  background: var(--surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-hi);
@@ -455,7 +477,7 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
   position: relative;
   color: var(--text-2);
 }
